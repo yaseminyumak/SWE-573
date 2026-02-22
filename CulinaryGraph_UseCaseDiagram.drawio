@@ -1,0 +1,91 @@
+<mxfile host="app.diagrams.net" agent="Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36" version="29.0.3">
+  <diagram name="CulinaryGraph_Final_UseCase" id="cg-final-1">
+    <mxGraphModel dx="2370" dy="974" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="2" value="CulinaryGraph System" style="shape=rect;html=1;verticalAlign=top;fontStyle=1;whiteSpace=wrap;fillColor=#f9f9f9;strokeColor=#333333;strokeWidth=2;" parent="1" vertex="1">
+          <mxGeometry x="220" y="40" width="380" h="840" as="geometry" />
+        </mxCell>
+        <mxCell id="10" value="Register" style="ellipse;whiteSpace=wrap;html=1;" parent="2" vertex="1">
+          <mxGeometry x="110" y="40" width="160" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="11" value="Login" style="ellipse;whiteSpace=wrap;html=1;" parent="2" vertex="1">
+          <mxGeometry x="110" y="110" width="160" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="12" value="Search Techniques &amp; Ingredients" style="ellipse;whiteSpace=wrap;html=1;" parent="2" vertex="1">
+          <mxGeometry x="110" y="180" width="160" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="13" value="Add Technique / Ingredients" style="ellipse;whiteSpace=wrap;html=1;" parent="2" vertex="1">
+          <mxGeometry x="110" y="260" width="160" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="14" value="Delete his/her content" style="ellipse;whiteSpace=wrap;html=1;" parent="2" vertex="1">
+          <mxGeometry x="110" y="340" width="160" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="15" value="Edit his/her content" style="ellipse;whiteSpace=wrap;html=1;" parent="2" vertex="1">
+          <mxGeometry x="110" y="420" width="160" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="16" value="Verify Content" style="ellipse;whiteSpace=wrap;html=1;" parent="2" vertex="1">
+          <mxGeometry x="110" y="500" width="160" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="17" value="Establish Relationship" style="ellipse;whiteSpace=wrap;html=1;" parent="2" vertex="1">
+          <mxGeometry x="110" y="580" width="160" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="18" value="View Knowledge Map" style="ellipse;whiteSpace=wrap;html=1;" parent="2" vertex="1">
+          <mxGeometry x="110" y="660" width="160" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="19" value="Add New Region" style="ellipse;whiteSpace=wrap;html=1;" parent="2" vertex="1">
+          <mxGeometry x="110" y="730" width="160" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="20" value="Add New Category" style="ellipse;whiteSpace=wrap;html=1;" parent="2" vertex="1">
+          <mxGeometry x="110" y="785" width="160" height="50" as="geometry" />
+        </mxCell>
+        <mxCell id="3" value="Contributor" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" parent="1" vertex="1">
+          <mxGeometry x="80" y="240" width="30" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="4" value="Guest" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" parent="1" vertex="1">
+          <mxGeometry x="80" y="500" width="30" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="5" value="Admin" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;" parent="1" vertex="1">
+          <mxGeometry x="720" y="450" width="30" height="60" as="geometry" />
+        </mxCell>
+        <mxCell id="21" parent="1" source="3" target="11" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="22" parent="1" source="3" target="12" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="23" parent="1" source="3" target="13" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="24" parent="1" source="3" target="14" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="25" parent="1" source="3" target="15" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="26" parent="1" source="3" target="17" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="27" parent="1" source="4" target="10" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="28" parent="1" source="4" target="12" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="29" parent="1" source="4" target="18" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="30" parent="1" source="5" target="16" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="31" parent="1" source="5" target="19" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="32" parent="1" source="5" target="20" edge="1">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
