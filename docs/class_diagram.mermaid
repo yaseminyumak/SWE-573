@@ -1,0 +1,121 @@
+classDiagram
+
+    %% ══════════════════════════════════════
+    %% AGGREGATE ROOT: Technique
+    %% ══════════════════════════════════════
+    class Technique {
+        -TechniqueId id
+        -String name
+        -String description
+        -RegionId region
+        -ContributorId createdBy
+        -PublishStatus status
+        -DateTime createdAt
+        +create(name, desc, region, contributor) Technique$
+        +publish() void
+        +archive() void
+        +isPublished() bool
+        +belongsToRegion(regionId) bool
+    }
+
+    class PublishStatus {
+        <<enumeration>>
+        DRAFT
+        PUBLISHED
+        ARCHIVED
+    }
+
+    %% ══════════════════════════════════════
+    %% AGGREGATE ROOT: Ingredient
+    %% ══════════════════════════════════════
+    class Ingredient {
+        -IngredientId id
+        -String name
+        -String description
+        -RegionId region
+        -Seasonality seasonality
+        -ContributorId createdBy
+        -PublishStatus status
+        -DateTime createdAt
+        +create(name, desc, region, seasonality, contributor) Ingredient$
+        +publish() void
+        +archive() void
+        +isAvailableIn(month) bool
+        +isPublished() bool
+        +belongsToRegion(regionId) bool
+    }
+
+    class Seasonality {
+        -Month startMonth
+        -Month endMonth
+        +includes(month) bool
+        +describe() String
+    }
+
+    %% ══════════════════════════════════════
+    %% AGGREGATE ROOT: User
+    %% ══════════════════════════════════════
+    class User {
+        -UserId id
+        -String username
+        -Email email
+        -UserRole role
+        -DateTime joinedAt
+        +register(username, email) User$
+        +promoteToValidator() void
+        +canContribute() bool
+        +canValidate() bool
+        +isValidator() bool
+    }
+
+    class UserRole {
+        <<enumeration>>
+        CONTRIBUTOR
+        VALIDATOR
+    }
+
+    class Email {
+        -String value
+        +isValid() bool
+    }
+
+    %% ══════════════════════════════════════
+    %% VALUE OBJECT: Region
+    %% ══════════════════════════════════════
+    class Region {
+        -RegionId id
+        -String name
+        -String country
+        +displayName() String
+        +isSameCountry(other) bool
+    }
+
+    %% ══════════════════════════════════════
+    %% DOMAIN SERVICE
+    %% ══════════════════════════════════════
+    class CatalogSearchService {
+        <<service>>
+        +findTechniquesByRegion(regionId) List~Technique~
+        +findIngredientsByRegion(regionId) List~Ingredient~
+        +findIngredientsByMonth(regionId, month) List~Ingredient~
+        +searchAll(keyword, regionId) SearchResult
+    }
+
+    %% ══════════════════════════════════════
+    %% RELATIONSHIPS
+    %% ══════════════════════════════════════
+    Technique --> PublishStatus
+    Technique --> Region : originates from
+    Technique --> User : created by
+
+    Ingredient --> PublishStatus
+    Ingredient *-- Seasonality
+    Ingredient --> Region : native to
+    Ingredient --> User : created by
+
+    User --> UserRole
+    User *-- Email
+
+    CatalogSearchService ..> Technique : queries
+    CatalogSearchService ..> Ingredient : queries
+    CatalogSearchService ..> Region : filters by
