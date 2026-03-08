@@ -53,6 +53,24 @@ classDiagram
     }
 
     %% ══════════════════════════════════════
+    %% AGGREGATE ROOT: Recipe
+    %% ══════════════════════════════════════
+    class Recipe {
+        -RecipeId id
+        -String name
+        -String description
+        -RegionId region
+        -ContributorId createdBy
+        -PublishStatus status
+        -DateTime createdAt
+        +create(name, desc, region, contributor) Recipe$
+        +publish() void
+        +archive() void
+        +isPublished() bool
+        +belongsToRegion(regionId) bool
+    }
+
+    %% ══════════════════════════════════════
     %% AGGREGATE ROOT: User
     %% ══════════════════════════════════════
     class User {
@@ -98,6 +116,7 @@ classDiagram
         +findTechniquesByRegion(regionId) List~Technique~
         +findIngredientsByRegion(regionId) List~Ingredient~
         +findIngredientsByMonth(regionId, month) List~Ingredient~
+        +findRecipesByRegion(regionId) List~Recipe~
         +searchAll(keyword, regionId) SearchResult
     }
 
@@ -113,9 +132,16 @@ classDiagram
     Ingredient --> Region : native to
     Ingredient --> User : created by
 
+    Recipe --> PublishStatus
+    Recipe --> Region : "from region"
+    Recipe --> User : created by
+    Recipe --> Technique : uses
+    Recipe --> Ingredient : uses
+
     User --> UserRole
     User *-- Email
 
     CatalogSearchService ..> Technique : queries
     CatalogSearchService ..> Ingredient : queries
+    CatalogSearchService ..> Recipe : queries
     CatalogSearchService ..> Region : filters by
