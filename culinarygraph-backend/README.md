@@ -2,7 +2,30 @@
 
 Modular monolith backend (DDD). Package layout: `shared`, `catalog`, `recipe`, `identity`, `search`.
 
-## Run locally
+## Run with Docker (sadece altyapı)
+
+Backend ve frontend Docker’da değil; sadece PostgreSQL ve Keycloak Docker’da çalışıyor.
+
+1. **Docker’ı başlat** (PostgreSQL, Keycloak):
+   ```bash
+   cd docker
+   docker compose up -d
+   ```
+   - PostgreSQL: `localhost:5432`
+   - Keycloak: http://localhost:8180
+
+2. **Backend’i IntelliJ’den çalıştır**
+   - Run: `CulinaryGraphBackendApplication` (veya `./mvnw spring-boot:run`)
+   - Varsayılan ayarlar: DB `localhost:5432`, Keycloak `http://localhost:8180/realms/culinarygraph`, port 8080
+
+3. **Frontend’i yerelde çalıştır** (ayrı terminal):
+   ```bash
+   cd culinarygraph-frontend
+   npm install && npm run dev
+   ```
+   - Tarayıcı: http://localhost:5173 — `/api` istekleri Vite proxy ile backend’e (8080) gider.
+
+## Run locally (sadece PostgreSQL)
 
 1. **Start PostgreSQL**
    ```bash

@@ -1,0 +1,70 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: culinarygraph
+      POSTGRES_USER: culinarygraph
+      POSTGRES_PASSWORD: culinarygraph
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U culinarygraph"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  postgres-kc:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: keycloak
+    volumes:
+      - pgkcdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U keycloak"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:24.0.1
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres-kc:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: keycloak
+      KC_HOSTNAME_STRICT: "false"
+      KC_HTTP_ENABLED: "true"
+    command: ["start", "--import-realm"]
+    volumes:
+      - ./keycloak/culinarygraph-realm.json:/opt/keycloak/data/import/culinarygraph-realm.json
+    ports:
+      - "8180:8080"
+    depends_on:
+      postgres-kc:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:8080/health/ready || wget -q --spider http://127.0.0.1:8080/ || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 90s
+
+  # Backend şimdilik IntelliJ'den çalıştırılıyor (port 8080)
+  # backend:
+  #   build: ...
+
+  # Frontend de şimdilik yerelde çalıştırılıyor (npm run dev, port 5173)
+  # frontend:
+  #   build: ...
+  # nginx:
+  #   ...
+
+volumes:
+  pgdata:
+  pgkcdata:
