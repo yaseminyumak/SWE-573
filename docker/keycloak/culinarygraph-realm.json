@@ -1,0 +1,40 @@
+{
+  "realm": "culinarygraph",
+  "enabled": true,
+  "registrationAllowed": true,
+  "roles": {
+    "realm": [
+      { "name": "culinarygraph-contributor" },
+      { "name": "culinarygraph-validator" }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "culinarygraph-app",
+      "name": "CulinaryGraph SPA",
+      "enabled": true,
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "directAccessGrantsEnabled": true,
+      "redirectUris": [
+        "http://localhost/*",
+        "http://localhost:80/*",
+        "http://localhost:5173",
+        "http://localhost:5173/",
+        "http://localhost:5173/*",
+        "http://127.0.0.1/*",
+        "http://127.0.0.1:5173",
+        "http://127.0.0.1:5173/",
+        "http://127.0.0.1:5173/*"
+      ],
+      "webOrigins": [
+        "http://localhost",
+        "http://localhost:80",
+        "http://localhost:5173",
+        "http://127.0.0.1",
+        "http://127.0.0.1:5173",
+        "+"
+      ]
+    }
+  ]
+}

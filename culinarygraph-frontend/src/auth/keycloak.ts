@@ -1,7 +1,17 @@
-/**
- * Keycloak init — will be configured when Keycloak is set up.
- * For now, export a no-op init so the app runs without auth.
- */
+import Keycloak from 'keycloak-js'
+
+const keycloakInstance = new Keycloak({
+  url: import.meta.env.VITE_KEYCLOAK_URL ?? 'http://localhost:8180',
+  realm: 'culinarygraph',
+  clientId: 'culinarygraph-app',
+})
+
 export function initKeycloak() {
-  return Promise.resolve(undefined)
+  return keycloakInstance.init({
+    onLoad: 'check-sso',
+    pkceMethod: 'S256',
+    checkLoginIframe: false,
+  })
 }
+
+export { keycloakInstance as keycloak }
