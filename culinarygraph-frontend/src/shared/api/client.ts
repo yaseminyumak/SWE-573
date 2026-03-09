@@ -1,4 +1,4 @@
-import { keycloak } from '../auth/keycloak'
+import { keycloak } from '../../auth/keycloak'
 
 const API_BASE = import.meta.env.VITE_API_BASE ?? '/api'
 

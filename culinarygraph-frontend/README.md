@@ -11,7 +11,7 @@ npm run dev
 
 Open http://localhost:5173
 
-**Şu anki kurulum:** Backend IntelliJ’de (port 8080), sadece PostgreSQL ve Keycloak Docker’da. Vite dev server `/api` isteklerini `http://localhost:8080`’e proxy eder (vite.config.ts). Önce `cd docker && docker compose up -d`, sonra backend’i IntelliJ’den çalıştırın, ardından burada `npm run dev`.
+**Şu anki kurulum:** Backend IntelliJ’de (port 8080), sadece PostgreSQL ve Keycloak konteynerlerde (Podman veya Docker). Vite dev server `/api` isteklerini `http://localhost:8080`’e proxy eder (vite.config.ts). Önce `cd docker && podman compose up -d` (veya `docker compose up -d`), sonra backend’i IntelliJ’den çalıştırın, ardından burada `npm run dev`.
 
 ## Build
 
@@ -20,11 +20,12 @@ npm run build
 npm run preview   # preview production build
 ```
 
-## Docker
+## Container
 
 ```bash
-docker build -t culinarygraph-frontend .
-docker run -p 80:80 culinarygraph-frontend
+podman build -t culinarygraph-frontend .
+podman run -p 80:80 culinarygraph-frontend
+# veya docker build / docker run
 ```
 
 ## Env

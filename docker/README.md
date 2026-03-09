@@ -1,10 +1,11 @@
-# CulinaryGraph — Docker (sadece altyapı)
+# CulinaryGraph — Container ortamı (Podman / Docker)
 
-PostgreSQL (uygulama + Keycloak için) ve Keycloak çalıştırır. **Backend ve frontend Docker’da değil;** IntelliJ ve `npm run dev` ile yerelde çalıştırılır.
+PostgreSQL (uygulama + Keycloak için) ve Keycloak çalıştırır. **Backend ve frontend konteyner içinde değil;** IntelliJ ve `npm run dev` ile yerelde çalıştırılır.
 
 ## Gereksinimler
 
-- Docker ve Docker Compose
+- **Podman** (veya Docker) ve **Podman Compose** / Docker Compose  
+  Podman kullanıyorsanız: `podman compose` (Podman 4.x ile yerleşik destek) veya `podman-compose` kurulumu yeterli.
 
 ## Komutlar
 
@@ -12,7 +13,8 @@ Reponun kökünden:
 
 ```bash
 cd docker
-docker compose up -d
+podman compose up -d
+# veya: docker compose up -d
 ```
 
 - **PostgreSQL:** `localhost:5432` (kullanıcı/şifre: `culinarygraph`)
@@ -21,7 +23,7 @@ docker compose up -d
 
 ## Yerel geliştirme akışı
 
-1. Docker’ı başlat: `docker compose up -d`
+1. Konteynerleri başlat: `podman compose up -d` (veya `docker compose up -d`)
 2. Backend’i IntelliJ’den çalıştır (port 8080)
 3. Frontend: `cd culinarygraph-frontend && npm install && npm run dev` → http://localhost:5173
 
@@ -42,13 +44,47 @@ docker compose up -d
 **Realm’i sıfırlayıp JSON’dan tekrar import etmek** (Keycloak + Keycloak DB silinir; kayıt JSON’da açık gelir):
 ```bash
 cd docker
-docker compose down -v
-docker compose up -d
+podman compose down -v
+podman compose up -d
+# veya: docker compose down -v && docker compose up -d
 ```
 Ardından 1–2 dakika bekleyin; realm `culinarygraph-realm.json` ile tekrar oluşur ve kayıt açık olur.
 
 ## Kapatma
 
 ```bash
-docker compose down -v
+podman compose down -v
+# veya: docker compose down -v
 ```
+
+## Podman: "docker-credential-desktop" hatası
+
+`podman compose` kullanırken şu hata çıkarsa:
+
+```
+error getting credentials - err: exec: "docker-credential-desktop": executable file not found in $PATH
+```
+
+Sebep: Sistemdeki Docker/Podman config (`~/.docker/config.json`) credential helper olarak `docker-credential-desktop` (Docker Desktop’a ait) kullanıyor; Podman ile bu yok.
+
+**Çözüm:** Config’ten credential store’u kapatın veya boş bırakın:
+
+```bash
+# Config dosyasını aç
+editor ~/.docker/config.json
+```
+
+İçinde `"credsStore": "desktop"` (veya benzeri) varsa şunlardan birini yapın:
+- Bu satırı silin, veya
+- `"credsStore": ""` yapın.
+
+Örnek (sadece credsStore kaldırıldı):
+
+```json
+{
+  "auths": {}
+}
+```
+
+Kaydedip tekrar deneyin: `podman compose up -d`.  
+(İsterseniz credential store’u tamamen kaldırmak yerine sadece `credsStore` anahtarını silmek yeterli.)
