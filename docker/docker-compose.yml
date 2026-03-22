@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: postgres:16-alpine
+    image: docker.io/library/postgres:16-alpine
     environment:
       POSTGRES_DB: culinarygraph
       POSTGRES_USER: culinarygraph
@@ -16,7 +16,7 @@ services:
       retries: 5
 
   postgres-kc:
-    image: postgres:16-alpine
+    image: docker.io/library/postgres:16-alpine
     environment:
       POSTGRES_DB: keycloak
       POSTGRES_USER: keycloak
@@ -48,22 +48,36 @@ services:
     depends_on:
       postgres-kc:
         condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1:8080/health/ready || wget -q --spider http://127.0.0.1:8080/ || exit 1"]
-      interval: 15s
-      timeout: 5s
-      retries: 10
-      start_period: 90s
+    # No container healthcheck: official image often has no wget/curl; bad healthcheck = compose stuck "waiting"
+    # Keycloak is ready when logs show "Listening on" (~1–3 min with realm import)
 
-  # Backend şimdilik IntelliJ'den çalıştırılıyor (port 8080)
-  # backend:
-  #   build: ...
+  backend:
+    build:
+      context: ../culinarygraph-backend
+      dockerfile: Dockerfile
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      DB_USERNAME: culinarygraph
+      DB_PASSWORD: culinarygraph
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
 
-  # Frontend de şimdilik yerelde çalıştırılıyor (npm run dev, port 5173)
-  # frontend:
-  #   build: ...
-  # nginx:
-  #   ...
+  frontend:
+    build:
+      context: ../culinarygraph-frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_KEYCLOAK_URL: http://localhost:8180
+        VITE_API_BASE: /api
+    ports:
+      - "5173:80"
+    depends_on:
+      - backend
 
 volumes:
   pgdata:

@@ -1,36 +1,43 @@
 # CulinaryGraph Frontend
 
-React + Vite + Tailwind CSS + TanStack Query + React Router. Keycloak auth will be wired in the auth step.
+React + Vite + Tailwind CSS + TanStack Query + React Router + Keycloak.
 
-## Run locally
+## Tam yığın (Podman Compose)
+
+Backend + Keycloak + DB ile birlikte:
+
+```bash
+cd ../docker
+podman compose up --build -d
+```
+
+- UI: **http://localhost:5173** (Nginx, port 80 → host 5173)  
+- `/api` istekleri konteyner içinde backend’e proxy edilir (`nginx-default.conf`).
+
+## Yerel geliştirme (Vite)
 
 ```bash
 npm install
 npm run dev
 ```
 
-Open http://localhost:5173
-
-**Şu anki kurulum:** Backend IntelliJ’de (port 8080), sadece PostgreSQL ve Keycloak konteynerlerde (Podman veya Docker). Vite dev server `/api` isteklerini `http://localhost:8080`’e proxy eder (vite.config.ts). Önce `cd docker && podman compose up -d` (veya `docker compose up -d`), sonra backend’i IntelliJ’den çalıştırın, ardından burada `npm run dev`.
+http://localhost:5173 — `vite.config.ts` içinde `/api` → `http://localhost:8080` proxy. Önce `../docker` altında `podman compose up -d` ve backend’in 8080’de çalışması gerekir.
 
 ## Build
 
 ```bash
 npm run build
-npm run preview   # preview production build
+npm run preview   # production build önizleme
 ```
 
-## Container
+## Container (tek imaj)
 
-```bash
-podman build -t culinarygraph-frontend .
-podman run -p 80:80 culinarygraph-frontend
-# veya docker build / docker run
-```
+Dockerfile build aşamasında `VITE_KEYCLOAK_URL` ve `VITE_API_BASE` set edilir; tam yığın için `../docker/docker-compose.yml` kullan.
 
 ## Env
 
-- `VITE_API_BASE` — API base URL (default `/api` for proxy)
+- `VITE_API_BASE` — API tabanı (varsayılan `/api`)
+- `VITE_KEYCLOAK_URL` — Keycloak sunucu URL’si (varsayılan `http://localhost:8180`)
 
 ## Structure
 
