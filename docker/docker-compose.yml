@@ -41,11 +41,13 @@ services:
       KC_DB_PASSWORD: keycloak
       # Without TLS/domain, `start` often shows "HTTPS required" on admin console; dev mode allows plain HTTP.
       KC_HOSTNAME_STRICT: "false"
+      KC_HOSTNAME_STRICT_HTTPS: "false"
       KC_HTTP_ENABLED: "true"
-    # start-dev: HTTP for admin UI; not for production. --import-realm keeps realm JSON import.
-    command: ["start-dev", "--import-realm"]
+    # Bootstrap sets master + culinarygraph sslRequired=NONE so http://PUBLIC_IP:8180 works (see keycloak-http-bootstrap.sh).
+    entrypoint: ["/bin/sh", "/opt/keycloak/keycloak-http-bootstrap.sh"]
     volumes:
       - ./keycloak/culinarygraph-realm.json:/opt/keycloak/data/import/culinarygraph-realm.json
+      - ./keycloak/keycloak-http-bootstrap.sh:/opt/keycloak/keycloak-http-bootstrap.sh:ro
     ports:
       - "8180:8080"
     depends_on:
