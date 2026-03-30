@@ -76,6 +76,8 @@ services:
     build:
       context: ../culinarygraph-frontend
       dockerfile: Dockerfile
+      # Droplet / public IP: override at build time, e.g.:
+      #   docker compose build --build-arg VITE_KEYCLOAK_URL=http://YOUR_IP:8180 frontend
       args:
         VITE_KEYCLOAK_URL: http://localhost:8180
         VITE_API_BASE: /api
