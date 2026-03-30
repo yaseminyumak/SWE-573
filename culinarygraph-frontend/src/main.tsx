@@ -8,9 +8,11 @@ const rootEl = document.getElementById('root')
 if (!rootEl) {
   throw new Error('Missing #root')
 }
+// Narrow for TS (closure passed to .then/.catch loses control-flow narrowing on rootEl).
+const container: HTMLElement = rootEl
 
 function renderApp() {
-  createRoot(rootEl).render(
+  createRoot(container).render(
     <StrictMode>
       <App />
     </StrictMode>,
