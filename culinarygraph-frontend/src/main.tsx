@@ -1,3 +1,4 @@
+import './auth/insecureContextCryptoPolyfill'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { initKeycloak } from './auth/keycloak'
