@@ -31,9 +31,9 @@ Frontend, tarayıcıdan `/api` isteklerini Nginx ile **backend** konteynerine y�
 
 Backend **`docker`** Spring profili ile çalışır: veritabanı `postgres` servis adıyla, JWT doğrulama Keycloak iç ağı (`keycloak:8080` JWKS) üzerinden.
 
-### Keycloak: “HTTPS required” (HTTP + IP / Droplet)
+### Keycloak: “HTTPS required” (HTTP + halka açık IP / Droplet)
 
-Keycloak `start` (production) modunda yönetim konsolu bazen yalnızca HTTPS kabul eder. Bu compose **geliştirme modu** `start-dev` kullanır; böylece `http://…:8180` ile admin ve realm akışı çalışır. Gerçek üretimde domain + TLS ve `start` önerilir.
+`master` realm varsayılanı `sslRequired=EXTERNAL`: tarayıcıdan `http://DROPLET_IP:8180` giden istekler “dış” sayılır ve HTTP reddedilir. `start-dev` tek başına bunu kaldırmaz. Bu yüzden `keycloak-http-bootstrap.sh` konteyner içinden `kcadm` ile `master` (ve import edilen `culinarygraph`) için `sslRequired=NONE` ayarlar. **Yalnızca geliştirme / ders ortamı** içindir; gerçek üretimde domain + TLS kullanın.
 
 ## Durdurma ve temizlik
 

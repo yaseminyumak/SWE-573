@@ -1,6 +1,7 @@
 {
   "realm": "culinarygraph",
   "enabled": true,
+  "sslRequired": "none",
   "registrationAllowed": true,
   "roles": {
     "realm": [
