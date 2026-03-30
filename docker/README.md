@@ -39,6 +39,18 @@ Backend **`docker`** Spring profili ile çalışır: veritabanı `postgres` serv
 
 Tarayıcıda yalnızca **HTTPS** veya **`http://localhost` / `127.0.0.1`** “secure context” sayılır; `http://DROPLET_IP:5173` değil. **keycloak-js** hem PKCE (`crypto.subtle`) hem OAuth **state** için **`crypto.randomUUID`** kullanır; ikisi de güvensiz bağlamda eksik olabilir. Uygulama: güvenli bağlam değilse **PKCE kapatılır** (`pkceMethod: false`) ve **`randomUUID` için `getRandomValues` tabanlı polyfill** yüklenir (yalnızca geliştirme/Droplet kolaylığı; üretimde **HTTPS** hedefleyin). Keycloak token adımında PKCE hatası alırsanız: **Clients → `culinarygraph-app` → Advanced** içinde PKCE’yi isteğe bağlı yapın.
 
+### Keycloak: `Invalid parameter: redirect_uri` (400)
+
+Tarayıcıdaki uygulama adresi (ör. `http://DROPLET_IP:5173/`) **client’ın “Valid redirect URIs”** listesinde yoksa Keycloak isteği reddeder. `culinarygraph-realm.json` içinde örnek Droplet satırları vardır; **yalnızca ilk import’ta** (boş Keycloak DB) uygulanır.
+
+**Zaten çalışan bir sunucuda** (volume dolu) iki seçenek:
+
+1. **Admin konsolu:** `culinarygraph` realm → **Clients** → **culinarygraph-app** → **Access settings** → **Valid redirect URIs** ve **Web origins** içine ekle:  
+   `http://SENIN_IP:5173/*` (ve gerekirse sondaki `/` olmadan aynı kök). **Save**.
+2. Veya realm’i JSON’dan yeniden almak için Keycloak veritabanını sıfırlayıp stack’i kaldırıp açmak (`compose down -v` — **tüm kullanıcı/oturum silinir**).
+
+Farklı bir IP kullanıyorsan `docker/keycloak/culinarygraph-realm.json` içindeki örnek IP’yi kendi adresinle değiştirip yalnızca **yeni** kurulumlarda import ettir veya yine Admin’den elle ekle.
+
 ## Durdurma ve temizlik
 
 ```bash
