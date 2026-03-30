@@ -37,7 +37,7 @@ Backend **`docker`** Spring profili ile çalışır: veritabanı `postgres` serv
 
 ### HTTP + ham IP: “Web Crypto API is not available”
 
-Tarayıcıda yalnızca **HTTPS** veya **`http://localhost` / `127.0.0.1`** “secure context” sayılır; `http://DROPLET_IP:5173` değil. **PKCE (S256)** `crypto.subtle` ister → konsolda bu hata ve beyaz ekran. Frontend, güvenli bağlam değilse PKCE’yi kapatır (`pkceMethod: false`). Keycloak’da giriş yine **“Proof Key for Code Exchange”** yüzünden reddedilirse: **Admin → Clients → `culinarygraph-app` → Advanced / Capability** bölümünde PKCE’yi **isteğe bağlı / kapalı** (sürüme göre alan adı değişir) yapın veya **HTTPS + alan adı** kullanın.
+Tarayıcıda yalnızca **HTTPS** veya **`http://localhost` / `127.0.0.1`** “secure context” sayılır; `http://DROPLET_IP:5173` değil. **keycloak-js** hem PKCE (`crypto.subtle`) hem OAuth **state** için **`crypto.randomUUID`** kullanır; ikisi de güvensiz bağlamda eksik olabilir. Uygulama: güvenli bağlam değilse **PKCE kapatılır** (`pkceMethod: false`) ve **`randomUUID` için `getRandomValues` tabanlı polyfill** yüklenir (yalnızca geliştirme/Droplet kolaylığı; üretimde **HTTPS** hedefleyin). Keycloak token adımında PKCE hatası alırsanız: **Clients → `culinarygraph-app` → Advanced** içinde PKCE’yi isteğe bağlı yapın.
 
 ## Durdurma ve temizlik
 
