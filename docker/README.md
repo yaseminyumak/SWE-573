@@ -35,6 +35,10 @@ Backend **`docker`** Spring profili ile çalışır: veritabanı `postgres` serv
 
 `master` realm varsayılanı `sslRequired=EXTERNAL`: tarayıcıdan `http://DROPLET_IP:8180` giden istekler “dış” sayılır ve HTTP reddedilir. `start-dev` tek başına bunu kaldırmaz. Bu yüzden `keycloak-http-bootstrap.sh` konteyner içinden `kcadm` ile `master` (ve import edilen `culinarygraph`) için `sslRequired=NONE` ayarlar. **Yalnızca geliştirme / ders ortamı** içindir; gerçek üretimde domain + TLS kullanın.
 
+### HTTP + ham IP: “Web Crypto API is not available”
+
+Tarayıcıda yalnızca **HTTPS** veya **`http://localhost` / `127.0.0.1`** “secure context” sayılır; `http://DROPLET_IP:5173` değil. **PKCE (S256)** `crypto.subtle` ister → konsolda bu hata ve beyaz ekran. Frontend, güvenli bağlam değilse PKCE’yi kapatır (`pkceMethod: false`). Keycloak’da giriş yine **“Proof Key for Code Exchange”** yüzünden reddedilirse: **Admin → Clients → `culinarygraph-app` → Advanced / Capability** bölümünde PKCE’yi **isteğe bağlı / kapalı** (sürüme göre alan adı değişir) yapın veya **HTTPS + alan adı** kullanın.
+
 ## Durdurma ve temizlik
 
 ```bash
