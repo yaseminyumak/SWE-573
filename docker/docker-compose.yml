@@ -30,7 +30,8 @@ services:
       retries: 5
 
   keycloak:
-    image: quay.io/keycloak/keycloak:24.0.1
+    # Docker Hub mirror (same upstream image). Use if quay.io returns 502.
+    image: docker.io/keycloak/keycloak:24.0.1
     environment:
       KEYCLOAK_ADMIN: admin
       KEYCLOAK_ADMIN_PASSWORD: admin
@@ -38,9 +39,11 @@ services:
       KC_DB_URL: jdbc:postgresql://postgres-kc:5432/keycloak
       KC_DB_USERNAME: keycloak
       KC_DB_PASSWORD: keycloak
+      # Without TLS/domain, `start` often shows "HTTPS required" on admin console; dev mode allows plain HTTP.
       KC_HOSTNAME_STRICT: "false"
       KC_HTTP_ENABLED: "true"
-    command: ["start", "--import-realm"]
+    # start-dev: HTTP for admin UI; not for production. --import-realm keeps realm JSON import.
+    command: ["start-dev", "--import-realm"]
     volumes:
       - ./keycloak/culinarygraph-realm.json:/opt/keycloak/data/import/culinarygraph-realm.json
     ports:

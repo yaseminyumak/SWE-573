@@ -31,6 +31,10 @@ Frontend, tarayıcıdan `/api` isteklerini Nginx ile **backend** konteynerine y�
 
 Backend **`docker`** Spring profili ile çalışır: veritabanı `postgres` servis adıyla, JWT doğrulama Keycloak iç ağı (`keycloak:8080` JWKS) üzerinden.
 
+### Keycloak: “HTTPS required” (HTTP + IP / Droplet)
+
+Keycloak `start` (production) modunda yönetim konsolu bazen yalnızca HTTPS kabul eder. Bu compose **geliştirme modu** `start-dev` kullanır; böylece `http://…:8180` ile admin ve realm akışı çalışır. Gerçek üretimde domain + TLS ve `start` önerilir.
+
 ## Durdurma ve temizlik
 
 ```bash
@@ -70,7 +74,7 @@ podman compose logs -f keycloak
 
 Konteyner içinde JDK, Maven Central sertifikasını doğrulayamıyorsa (kurumsal ağ SSL incelemesi, eksik CA):
 
-1. Güncel `Dockerfile` CA paketini günceller ve `.mvn/jvm.config` ile SSL bayraklarını kullanır — `podman compose build --no-cache backend` deneyin.
+1. Güncel `Dockerfile` CA paketini günceller ve `MAVEN_OPTS` ile Maven SSL/transport bayraklarını kullanır — `podman compose build --no-cache backend` deneyin.
 2. Hâlâ olursa: kurumsal kök sertifikayı imajda `keytool` ile truststore’a ekleyin veya güvenli olmayan ağ dışında build alın.
 
 ## Podman: "docker-credential-desktop" hatası
