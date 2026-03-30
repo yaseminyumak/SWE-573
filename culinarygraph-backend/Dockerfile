@@ -10,11 +10,10 @@ RUN apt-get update \
 
 WORKDIR /app
 
-# Also set for subprocesses; .mvn/jvm.config + maven.config apply to `mvn` as well
+# SSL/PKIX workarounds for Maven Central inside some networks (no .mvn/ in repo — it is gitignored)
 ENV MAVEN_OPTS="-Dmaven.resolver.transport=wagon -Dmaven.wagon.http.ssl.insecure=true -Dmaven.wagon.http.ssl.allowall=true -Dmaven.wagon.http.ssl.ignore.validity.dates=true"
 
 COPY pom.xml .
-COPY .mvn .mvn
 COPY src ./src
 
 RUN mvn clean package -DskipTests -B
