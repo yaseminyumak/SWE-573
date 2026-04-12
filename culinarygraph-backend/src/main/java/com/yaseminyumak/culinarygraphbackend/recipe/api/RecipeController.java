@@ -39,12 +39,6 @@ public class RecipeController {
 		return toResponse(recipe);
 	}
 
-	@PutMapping("/{id}/publish")
-	public RecipeResponse publish(@PathVariable UUID id) {
-		Recipe recipe = recipeService.publish(id);
-		return toResponse(recipe);
-	}
-
 	@PutMapping("/{id}/archive")
 	public RecipeResponse archive(@PathVariable UUID id) {
 		Recipe recipe = recipeService.archive(id);
@@ -68,7 +62,11 @@ public class RecipeController {
 			r.getCreatedAt(),
 			r.getUpdatedAt(),
 			r.getSteps().stream().map(s -> new RecipeResponse.StepDto(s.getOrder(), s.getInstruction())).toList(),
-			r.getIngredients().stream().map(i -> new RecipeResponse.IngredientDto(i.getName(), i.getQuantity(), i.getUnit())).toList()
+			r.getIngredients().stream().map(i -> new RecipeResponse.IngredientDto(i.getName(), i.getQuantity(), i.getUnit(), i.getIngredientId())).toList(),
+			r.getCountry(),
+			r.getTags(),
+			r.getOriginStory(),
+			r.getAssociatedTechniqueNames()
 		);
 	}
 }

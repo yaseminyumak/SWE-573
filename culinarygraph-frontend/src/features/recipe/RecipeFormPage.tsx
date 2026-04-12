@@ -1,24 +1,36 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createRecipe } from './recipeApi'
 import type { CreateRecipeRequest, DifficultyLevel } from './recipeApi'
+import { fetchIngredients, fetchTechniques } from '../catalog/catalogApi'
+import RelationPicker from '../../shared/components/RelationPicker'
 
+const COUNTRIES = ['Select Country', 'France', 'Italy', 'Turkey', 'Japan', 'Mexico', 'India', 'China', 'United States', 'Spain', 'Greece', 'Morocco', 'Thailand', 'Korea', 'Other']
 const DIFFICULTIES: DifficultyLevel[] = ['EASY', 'MEDIUM', 'HARD']
 
 export default function RecipeFormPage() {
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const [title, setTitle] = useState('')
-  const [description, setDescription] = useState('')
-  const [difficulty, setDifficulty] = useState<DifficultyLevel>('MEDIUM')
-  const [durationMinutes, setDurationMinutes] = useState<number | ''>('')
-  const [steps, setSteps] = useState<{ order: number; instruction: string }[]>([{ order: 0, instruction: '' }])
-  const [ingredients, setIngredients] = useState<{ name: string; quantity: string; unit: string }[]>([
-    { name: '', quantity: '', unit: '' },
-  ])
 
-  const createMutation = useMutation({
+  const [title, setTitle] = useState('')
+  const [difficulty, setDifficulty] = useState<DifficultyLevel>('MEDIUM')
+  const [durationText, setDurationText] = useState('')
+  const [country, setCountry] = useState('')
+  const [region, setRegion] = useState('')
+  const [ingredients, setIngredients] = useState([{ name: '' }])
+  const [associatedTechniqueNames, setAssociatedTechniqueNames] = useState<string[]>([])
+  const [steps, setSteps] = useState<string[]>([''])
+  const [tags, setTags] = useState('')
+  const [originStory, setOriginStory] = useState('')
+
+  const { data: catalogIngredients = [] } = useQuery({ queryKey: ['catalog', 'ingredients'], queryFn: fetchIngredients })
+  const { data: techniques = [] } = useQuery({ queryKey: ['catalog', 'techniques'], queryFn: fetchTechniques })
+
+  const ingredientNames = catalogIngredients.map((i) => i.name)
+  const techniqueNames = techniques.map((t) => t.name)
+
+  const mutation = useMutation({
     mutationFn: (body: CreateRecipeRequest) => createRecipe(body),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['recipes'] })
@@ -26,180 +38,167 @@ export default function RecipeFormPage() {
     },
   })
 
-  const addStep = () => {
-    setSteps((s) => [...s, { order: s.length, instruction: '' }])
-  }
+  const addIng = () => setIngredients((s) => [...s, { name: '' }])
+  const updateIng = (i: number, v: string) =>
+    setIngredients((s) => s.map((x, idx) => idx === i ? { ...x, name: v } : x))
+  const removeIng = (i: number) => setIngredients((s) => s.filter((_, idx) => idx !== i))
 
-  const updateStep = (index: number, instruction: string) => {
-    setSteps((s) => s.map((step, i) => (i === index ? { ...step, instruction } : step)))
-  }
+  const addStep = () => setSteps((s) => [...s, ''])
+  const updateStep = (i: number, v: string) => setSteps((s) => s.map((x, idx) => idx === i ? v : x))
+  const removeStep = (i: number) => setSteps((s) => s.filter((_, idx) => idx !== i))
 
-  const removeStep = (index: number) => {
-    setSteps((s) => s.filter((_, i) => i !== index).map((step, i) => ({ ...step, order: i })))
-  }
-
-  const addIngredient = () => {
-    setIngredients((i) => [...i, { name: '', quantity: '', unit: '' }])
-  }
-
-  const updateIngredient = (index: number, field: 'name' | 'quantity' | 'unit', value: string) => {
-    setIngredients((i) => i.map((ing, idx) => (idx === index ? { ...ing, [field]: value } : ing)))
-  }
-
-  const removeIngredient = (index: number) => {
-    setIngredients((i) => i.filter((_, idx) => idx !== index))
+  const parseDuration = (text: string): number | null => {
+    const num = parseInt(text.replace(/[^0-9]/g, ''), 10)
+    return isNaN(num) ? null : num
   }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    const payload: CreateRecipeRequest = {
+    mutation.mutate({
       title: title.trim(),
-      description: description.trim() || undefined,
       difficulty,
-      durationMinutes: durationMinutes === '' ? null : Number(durationMinutes),
-      steps: steps.filter((s) => s.instruction.trim()).map((s, i) => ({ order: i, instruction: s.instruction.trim() })),
+      durationMinutes: parseDuration(durationText),
+      country: country && country !== 'Select Country' ? country : undefined,
+      region: region.trim() || undefined,
       ingredients: ingredients
         .filter((i) => i.name.trim())
-        .map((i) => ({ name: i.name.trim(), quantity: i.quantity.trim() || undefined, unit: i.unit.trim() || undefined })),
-    }
-    if (payload.steps.length === 0) payload.steps = [{ order: 0, instruction: 'Mix and cook.' }]
-    createMutation.mutate(payload)
+        .map((i) => ({ name: i.name.trim() })),
+      steps: steps
+        .filter((s) => s.trim())
+        .map((s, i) => ({ order: i, instruction: s.trim() })),
+      associatedTechniqueNames,
+      tags: tags.split(',').map((t) => t.trim()).filter(Boolean),
+      originStory: originStory.trim() || undefined,
+    })
   }
 
   return (
-    <div className="p-8 max-w-2xl mx-auto">
-      <h1 className="text-2xl font-bold mb-6">New recipe</h1>
-      <form onSubmit={handleSubmit} className="space-y-6">
+    <div className="max-w-3xl mx-auto px-6 py-6">
+      <h1 className="text-xl font-bold text-[#171433]">Add / Edit Recipe</h1>
+      <hr className="my-3 border-[#d67ec9]" />
+
+      <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium mb-1">Title *</label>
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            required
-            className="w-full px-3 py-2 border rounded dark:bg-gray-800 dark:border-gray-700"
-          />
+          <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
+          <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} required
+            placeholder="Enter recipe title"
+            className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#8c2d9c]" />
         </div>
+
         <div>
-          <label className="block text-sm font-medium mb-1">Description</label>
-          <textarea
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            rows={3}
-            className="w-full px-3 py-2 border rounded dark:bg-gray-800 dark:border-gray-700"
-          />
+          <label className="block text-sm font-medium text-gray-700 mb-1">Difficulty *</label>
+          <select value={difficulty} onChange={(e) => setDifficulty(e.target.value as DifficultyLevel)}
+            className="w-full border border-gray-300 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:border-[#8c2d9c]">
+            {DIFFICULTIES.map((d) => <option key={d}>{d}</option>)}
+          </select>
         </div>
-        <div className="flex gap-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">Difficulty</label>
-            <select
-              value={difficulty}
-              onChange={(e) => setDifficulty(e.target.value as DifficultyLevel)}
-              className="px-3 py-2 border rounded dark:bg-gray-800 dark:border-gray-700"
-            >
-              {DIFFICULTIES.map((d) => (
-                <option key={d} value={d}>
-                  {d}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm font-medium mb-1">Duration (min)</label>
-            <input
-              type="number"
-              min={0}
-              value={durationMinutes}
-              onChange={(e) => setDurationMinutes(e.target.value === '' ? '' : parseInt(e.target.value, 10))}
-              className="w-24 px-3 py-2 border rounded dark:bg-gray-800 dark:border-gray-700"
-            />
-          </div>
-        </div>
+
         <div>
-          <div className="flex items-center justify-between mb-2">
-            <label className="block text-sm font-medium">Steps</label>
-            <button type="button" onClick={addStep} className="text-sm text-blue-600 hover:underline">
-              + Add step
-            </button>
-          </div>
-          <ul className="space-y-2">
-            {steps.map((step, index) => (
-              <li key={index} className="flex gap-2">
-                <input
-                  value={step.instruction}
-                  onChange={(e) => updateStep(index, e.target.value)}
-                  placeholder={`Step ${index + 1}`}
-                  className="flex-1 px-3 py-2 border rounded dark:bg-gray-800 dark:border-gray-700"
-                />
-                <button
-                  type="button"
-                  onClick={() => removeStep(index)}
-                  disabled={steps.length <= 1}
-                  className="px-2 text-red-600 disabled:opacity-40"
-                >
-                  ×
+          <label className="block text-sm font-medium text-gray-700 mb-1">Duration *</label>
+          <input type="text" value={durationText} onChange={(e) => setDurationText(e.target.value)}
+            placeholder="e.g., 30 minutes, 1 hour"
+            className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#8c2d9c]" />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Country *</label>
+          <select value={country || 'Select Country'} onChange={(e) => setCountry(e.target.value)}
+            className="w-full border border-gray-300 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:border-[#8c2d9c]">
+            {COUNTRIES.map((c) => <option key={c}>{c}</option>)}
+          </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Region</label>
+          <input type="text" value={region} onChange={(e) => setRegion(e.target.value)}
+            placeholder="e.g., Aegean Region"
+            className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#8c2d9c]" />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Ingredients</label>
+          <div className="space-y-2">
+            {ingredients.map((ing, i) => (
+              <div key={i} className="flex gap-2">
+                {ingredientNames.length > 0 ? (
+                  <select
+                    value={ing.name}
+                    onChange={(e) => updateIng(i, e.target.value)}
+                    className="flex-1 border border-gray-300 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:border-[#8c2d9c]"
+                  >
+                    <option value="">Select ingredient…</option>
+                    {ingredientNames.map((n) => <option key={n} value={n}>{n}</option>)}
+                  </select>
+                ) : (
+                  <input type="text" value={ing.name} onChange={(e) => updateIng(i, e.target.value)}
+                    placeholder="Ingredient name"
+                    className="flex-1 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#8c2d9c]" />
+                )}
+                <button type="button" onClick={() => removeIng(i)}
+                  className="border border-gray-300 rounded px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                  Remove
                 </button>
-              </li>
+              </div>
             ))}
-          </ul>
-        </div>
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <label className="block text-sm font-medium">Ingredients</label>
-            <button type="button" onClick={addIngredient} className="text-sm text-blue-600 hover:underline">
-              + Add ingredient
-            </button>
           </div>
-          <ul className="space-y-2">
-            {ingredients.map((ing, index) => (
-              <li key={index} className="flex gap-2 flex-wrap">
-                <input
-                  value={ing.name}
-                  onChange={(e) => updateIngredient(index, 'name', e.target.value)}
-                  placeholder="Name"
-                  className="w-32 px-3 py-2 border rounded dark:bg-gray-800 dark:border-gray-700"
-                />
-                <input
-                  value={ing.quantity}
-                  onChange={(e) => updateIngredient(index, 'quantity', e.target.value)}
-                  placeholder="Qty"
-                  className="w-20 px-3 py-2 border rounded dark:bg-gray-800 dark:border-gray-700"
-                />
-                <input
-                  value={ing.unit}
-                  onChange={(e) => updateIngredient(index, 'unit', e.target.value)}
-                  placeholder="Unit"
-                  className="w-20 px-3 py-2 border rounded dark:bg-gray-800 dark:border-gray-700"
-                />
-                <button
-                  type="button"
-                  onClick={() => removeIngredient(index)}
-                  disabled={ingredients.length <= 1}
-                  className="px-2 text-red-600 disabled:opacity-40"
-                >
-                  ×
-                </button>
-              </li>
-            ))}
-          </ul>
-        </div>
-        {createMutation.isError && (
-          <p className="text-red-600">Failed to create recipe. Try again.</p>
-        )}
-        <div className="flex gap-3">
-          <button
-            type="submit"
-            disabled={createMutation.isPending || !title.trim()}
-            className="px-4 py-2 rounded bg-green-600 text-white hover:bg-green-700 disabled:opacity-50"
-          >
-            {createMutation.isPending ? 'Saving…' : 'Create recipe'}
+          <button type="button" onClick={addIng}
+            className="mt-2 border border-gray-300 rounded px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+            Add Ingredient
           </button>
-          <button
-            type="button"
-            onClick={() => navigate('/recipes')}
-            className="px-4 py-2 rounded border dark:border-gray-600"
-          >
-            Cancel
+        </div>
+
+        <RelationPicker
+          label="Associated Techniques"
+          available={techniqueNames}
+          selected={associatedTechniqueNames}
+          onAdd={(n) => setAssociatedTechniqueNames((s) => [...s, n])}
+          onRemove={(n) => setAssociatedTechniqueNames((s) => s.filter((x) => x !== n))}
+        />
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">Steps</label>
+          <div className="space-y-2">
+            {steps.map((step, i) => (
+              <div key={i} className="flex gap-2">
+                <input type="text" value={step} onChange={(e) => updateStep(i, e.target.value)}
+                  placeholder="Step description"
+                  className="flex-1 border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#8c2d9c]" />
+                <button type="button" onClick={() => removeStep(i)}
+                  className="border border-gray-300 rounded px-3 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                  Remove
+                </button>
+              </div>
+            ))}
+          </div>
+          <button type="button" onClick={addStep}
+            className="mt-2 border border-gray-300 rounded px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+            Add Step
+          </button>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Tags</label>
+          <input type="text" value={tags} onChange={(e) => setTags(e.target.value)}
+            placeholder="e.g., Vegetarian, Italian, Quick"
+            className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#8c2d9c]" />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Origin Story (optional)</label>
+          <textarea value={originStory} onChange={(e) => setOriginStory(e.target.value)}
+            rows={4}
+            placeholder="Share the story behind this recipe..."
+            className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#8c2d9c] resize-none" />
+        </div>
+
+        {mutation.isError && (
+          <p className="text-sm text-red-500">Failed to save. Please try again.</p>
+        )}
+
+        <div>
+          <button type="submit" disabled={mutation.isPending || !title.trim()}
+            className="bg-[#8c2d9c] text-white rounded px-5 py-2 text-sm font-medium hover:bg-[#7a2589] disabled:opacity-50 transition-colors">
+            {mutation.isPending ? 'Saving…' : 'Save'}
           </button>
         </div>
       </form>

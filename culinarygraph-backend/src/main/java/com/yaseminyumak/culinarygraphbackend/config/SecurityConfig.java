@@ -26,9 +26,9 @@ public class SecurityConfig {
 			.csrf(csrf -> csrf.disable())
 			.authorizeHttpRequests(auth -> auth
 				.requestMatchers(org.springframework.http.HttpMethod.GET, "/api/**").permitAll()
-				.requestMatchers(org.springframework.http.HttpMethod.POST, "/api/**").hasRole("CONTRIBUTOR")
-				.requestMatchers(org.springframework.http.HttpMethod.PUT, "/api/**").hasRole("CONTRIBUTOR")
-				.requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/**").hasRole("CONTRIBUTOR")
+				.requestMatchers(org.springframework.http.HttpMethod.POST, "/api/**").authenticated()
+				.requestMatchers(org.springframework.http.HttpMethod.PUT, "/api/**").authenticated()
+				.requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/**").authenticated()
 				.anyRequest().authenticated()
 			)
 			.oauth2ResourceServer(oauth2 -> oauth2

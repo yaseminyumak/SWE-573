@@ -10,6 +10,7 @@ export interface RecipeIngredientDto {
   name: string
   quantity: string
   unit: string
+  substitution?: string
 }
 
 export interface RecipeResponse {
@@ -18,12 +19,17 @@ export interface RecipeResponse {
   description: string
   difficulty: DifficultyLevel
   durationMinutes: number | null
+  country: string | null
+  region: string | null
   status: PublishStatus
   createdBy: string
   createdAt: string
   updatedAt: string
   steps: RecipeStepDto[]
   ingredients: RecipeIngredientDto[]
+  tags: string[]
+  originStory: string | null
+  associatedTechniqueNames: string[]
 }
 
 export interface CreateRecipeRequest {
@@ -31,8 +37,13 @@ export interface CreateRecipeRequest {
   description?: string
   difficulty?: DifficultyLevel
   durationMinutes?: number | null
+  country?: string
+  region?: string
   steps: { order: number; instruction: string }[]
-  ingredients: { name: string; quantity?: string; unit?: string }[]
+  ingredients: { name: string; quantity?: string; unit?: string; substitution?: string; ingredientId?: string | null }[]
+  tags?: string[]
+  originStory?: string
+  associatedTechniqueNames?: string[]
 }
 
 import { apiClient } from '../../shared/api/client'
