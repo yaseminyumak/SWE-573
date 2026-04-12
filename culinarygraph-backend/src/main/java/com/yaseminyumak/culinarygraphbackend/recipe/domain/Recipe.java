@@ -23,12 +23,18 @@ public class Recipe {
 	private Instant updatedAt;
 	private final List<RecipeStep> steps;
 	private final List<RecipeIngredient> ingredients;
+	private String country;
+	private List<String> tags;
+	private String originStory;
+	private List<String> associatedTechniqueNames;
 
 	private Recipe(UUID id, Instant createdAt, List<RecipeStep> steps, List<RecipeIngredient> ingredients) {
 		this.id = id;
 		this.createdAt = createdAt;
 		this.steps = new ArrayList<>(steps);
 		this.ingredients = new ArrayList<>(ingredients);
+		this.tags = new ArrayList<>();
+		this.associatedTechniqueNames = new ArrayList<>();
 	}
 
 	/**
@@ -37,7 +43,9 @@ public class Recipe {
 	public static Recipe fromPersistence(UUID id, String title, String description, DifficultyLevel difficulty,
 	                                     Integer durationMinutes, PublishStatus status, String createdBy,
 	                                     Instant createdAt, Instant updatedAt,
-	                                     List<RecipeStep> steps, List<RecipeIngredient> ingredients) {
+	                                     List<RecipeStep> steps, List<RecipeIngredient> ingredients,
+	                                     String country, List<String> tags, String originStory,
+	                                     List<String> associatedTechniqueNames) {
 		Recipe r = new Recipe(id, createdAt, steps != null ? steps : List.of(), ingredients != null ? ingredients : List.of());
 		r.title = title;
 		r.description = description != null ? description : "";
@@ -46,6 +54,10 @@ public class Recipe {
 		r.status = status != null ? status : PublishStatus.DRAFT;
 		r.createdBy = createdBy;
 		r.updatedAt = updatedAt != null ? updatedAt : createdAt;
+		r.country = country;
+		r.tags = tags != null ? new ArrayList<>(tags) : new ArrayList<>();
+		r.originStory = originStory;
+		r.associatedTechniqueNames = associatedTechniqueNames != null ? new ArrayList<>(associatedTechniqueNames) : new ArrayList<>();
 		return r;
 	}
 
@@ -53,7 +65,9 @@ public class Recipe {
 	 * Create a new recipe (DRAFT).
 	 */
 	public static Recipe create(String title, String description, DifficultyLevel difficulty, Integer durationMinutes,
-	                            String createdBy, List<RecipeStep> steps, List<RecipeIngredient> ingredients) {
+	                            String createdBy, List<RecipeStep> steps, List<RecipeIngredient> ingredients,
+	                            String country, List<String> tags, String originStory,
+	                            List<String> associatedTechniqueNames) {
 		Objects.requireNonNull(title, "title cannot be null");
 		Objects.requireNonNull(createdBy, "createdBy cannot be null");
 		Recipe r = new Recipe(UUID.randomUUID(), Instant.now(), steps != null ? steps : List.of(), ingredients != null ? ingredients : List.of());
@@ -61,9 +75,13 @@ public class Recipe {
 		r.description = description != null ? description.trim() : "";
 		r.difficulty = difficulty != null ? difficulty : DifficultyLevel.MEDIUM;
 		r.durationMinutes = durationMinutes != null && durationMinutes >= 0 ? durationMinutes : null;
-		r.status = PublishStatus.DRAFT;
+		r.status = PublishStatus.PUBLISHED;
 		r.createdBy = createdBy;
 		r.updatedAt = r.createdAt;
+		r.country = country;
+		r.tags = tags != null ? new ArrayList<>(tags) : new ArrayList<>();
+		r.originStory = originStory;
+		r.associatedTechniqueNames = associatedTechniqueNames != null ? new ArrayList<>(associatedTechniqueNames) : new ArrayList<>();
 		return r;
 	}
 
@@ -129,5 +147,21 @@ public class Recipe {
 
 	public List<RecipeIngredient> getIngredients() {
 		return Collections.unmodifiableList(ingredients);
+	}
+
+	public String getCountry() {
+		return country;
+	}
+
+	public List<String> getTags() {
+		return Collections.unmodifiableList(tags);
+	}
+
+	public String getOriginStory() {
+		return originStory;
+	}
+
+	public List<String> getAssociatedTechniqueNames() {
+		return Collections.unmodifiableList(associatedTechniqueNames);
 	}
 }

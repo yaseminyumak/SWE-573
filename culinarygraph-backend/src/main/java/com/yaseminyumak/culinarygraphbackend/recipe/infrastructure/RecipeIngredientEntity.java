@@ -24,15 +24,19 @@ public class RecipeIngredientEntity {
 	@Column(name = "unit", length = 100)
 	private String unit;
 
+	@Column(name = "ingredient_id")
+	private UUID ingredientId;
+
 	@SuppressWarnings("unused")
 	protected RecipeIngredientEntity() {
 	}
 
-	public RecipeIngredientEntity(RecipeEntity recipe, String name, String quantity, String unit) {
+	public RecipeIngredientEntity(RecipeEntity recipe, String name, String quantity, String unit, UUID ingredientId) {
 		this.recipe = recipe;
 		this.name = name;
 		this.quantity = quantity != null ? quantity : "";
 		this.unit = unit != null ? unit : "";
+		this.ingredientId = ingredientId;
 	}
 
 	public UUID getId() {
@@ -69,5 +73,13 @@ public class RecipeIngredientEntity {
 
 	public void setUnit(String unit) {
 		this.unit = unit;
+	}
+
+	public UUID getIngredientId() {
+		return ingredientId;
+	}
+
+	public void setIngredientId(UUID ingredientId) {
+		this.ingredientId = ingredientId;
 	}
 }

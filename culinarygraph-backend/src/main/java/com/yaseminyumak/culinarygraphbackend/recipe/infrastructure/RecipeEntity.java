@@ -42,6 +42,22 @@ public class RecipeEntity {
 	@Column(name = "updated_at", nullable = false)
 	private Instant updatedAt;
 
+	@Column(name = "country")
+	private String country;
+
+	@ElementCollection(fetch = FetchType.LAZY)
+	@CollectionTable(name = "recipe_tags", joinColumns = @JoinColumn(name = "recipe_id"))
+	@Column(name = "tag", length = 255)
+	private List<String> tags = new ArrayList<>();
+
+	@Column(name = "origin_story", columnDefinition = "TEXT")
+	private String originStory;
+
+	@ElementCollection(fetch = FetchType.LAZY)
+	@CollectionTable(name = "recipe_associated_techniques", joinColumns = @JoinColumn(name = "recipe_id"))
+	@Column(name = "technique_name", length = 500)
+	private List<String> associatedTechniqueNames = new ArrayList<>();
+
 	@OneToMany(mappedBy = "recipe", cascade = CascadeType.ALL, orphanRemoval = true)
 	@OrderBy("stepOrder")
 	private List<RecipeStepEntity> stepEntities = new ArrayList<>();
@@ -131,5 +147,37 @@ public class RecipeEntity {
 
 	public List<RecipeIngredientEntity> getIngredientEntities() {
 		return ingredientEntities;
+	}
+
+	public String getCountry() {
+		return country;
+	}
+
+	public void setCountry(String country) {
+		this.country = country;
+	}
+
+	public List<String> getTags() {
+		return tags;
+	}
+
+	public void setTags(List<String> tags) {
+		this.tags = tags;
+	}
+
+	public String getOriginStory() {
+		return originStory;
+	}
+
+	public void setOriginStory(String originStory) {
+		this.originStory = originStory;
+	}
+
+	public List<String> getAssociatedTechniqueNames() {
+		return associatedTechniqueNames;
+	}
+
+	public void setAssociatedTechniqueNames(List<String> associatedTechniqueNames) {
+		this.associatedTechniqueNames = associatedTechniqueNames;
 	}
 }

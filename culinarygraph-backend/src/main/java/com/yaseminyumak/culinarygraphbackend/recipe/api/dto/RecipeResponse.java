@@ -17,8 +17,12 @@ public record RecipeResponse(
 	Instant createdAt,
 	Instant updatedAt,
 	List<StepDto> steps,
-	List<IngredientDto> ingredients
+	List<IngredientDto> ingredients,
+	String country,
+	List<String> tags,
+	String originStory,
+	List<String> associatedTechniqueNames
 ) {
 	public record StepDto(int order, String instruction) {}
-	public record IngredientDto(String name, String quantity, String unit) {}
+	public record IngredientDto(String name, String quantity, String unit, UUID ingredientId) {}
 }

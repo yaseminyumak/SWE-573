@@ -6,4 +6,7 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.24.xsd">
     <!-- Migrations added as modules are implemented -->
     <include file="v1.0.0-create-recipes.sql" relativeToChangelogFile="true"/>
+    <include file="v1.1.0-create-catalog.sql" relativeToChangelogFile="true"/>
+    <include file="v1.2.0-recipe-ingredient-catalog-link.sql" relativeToChangelogFile="true"/>
+    <include file="v1.3.0-add-extended-fields.sql" relativeToChangelogFile="true"/>
 </databaseChangeLog>

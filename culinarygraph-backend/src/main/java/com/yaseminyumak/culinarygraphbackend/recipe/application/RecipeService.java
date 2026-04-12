@@ -26,7 +26,7 @@ public class RecipeService {
 			.map(s -> new RecipeStep(s.order(), s.instruction()))
 			.collect(Collectors.toList());
 		List<RecipeIngredient> ingredients = request.ingredients().stream()
-			.map(i -> new RecipeIngredient(i.name(), i.quantity(), i.unit()))
+			.map(i -> new RecipeIngredient(i.name(), i.quantity(), i.unit(), i.ingredientId()))
 			.collect(Collectors.toList());
 		Recipe recipe = Recipe.create(
 			request.title(),
@@ -35,7 +35,11 @@ public class RecipeService {
 			request.durationMinutes(),
 			createdBy,
 			steps,
-			ingredients
+			ingredients,
+			request.country(),
+			request.tags(),
+			request.originStory(),
+			request.associatedTechniqueNames()
 		);
 		return recipeRepository.save(recipe);
 	}

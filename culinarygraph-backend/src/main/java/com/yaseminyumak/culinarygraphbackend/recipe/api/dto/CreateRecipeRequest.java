@@ -5,6 +5,7 @@ import com.yaseminyumak.culinarygraphbackend.recipe.domain.PublishStatus;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
+import java.util.UUID;
 
 public record CreateRecipeRequest(
 	@NotBlank String title,
@@ -12,8 +13,12 @@ public record CreateRecipeRequest(
 	DifficultyLevel difficulty,
 	Integer durationMinutes,
 	@NotNull List<StepInput> steps,
-	@NotNull List<IngredientInput> ingredients
+	@NotNull List<IngredientInput> ingredients,
+	String country,
+	List<String> tags,
+	String originStory,
+	List<String> associatedTechniqueNames
 ) {
 	public record StepInput(int order, @NotBlank String instruction) {}
-	public record IngredientInput(@NotBlank String name, String quantity, String unit) {}
+	public record IngredientInput(@NotBlank String name, String quantity, String unit, UUID ingredientId) {}
 }

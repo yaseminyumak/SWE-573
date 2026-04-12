@@ -50,13 +50,17 @@ public class RecipeRepositoryImpl implements RecipeRepository {
 		e.setCreatedBy(recipe.getCreatedBy());
 		e.setCreatedAt(recipe.getCreatedAt());
 		e.setUpdatedAt(recipe.getUpdatedAt());
+		e.setCountry(recipe.getCountry());
+		e.setTags(new java.util.ArrayList<>(recipe.getTags()));
+		e.setOriginStory(recipe.getOriginStory());
+		e.setAssociatedTechniqueNames(new java.util.ArrayList<>(recipe.getAssociatedTechniqueNames()));
 		int order = 0;
 		for (RecipeStep step : recipe.getSteps()) {
 			RecipeStepEntity se = new RecipeStepEntity(e, order++, step.getInstruction());
 			e.getStepEntities().add(se);
 		}
 		for (RecipeIngredient ing : recipe.getIngredients()) {
-			RecipeIngredientEntity ie = new RecipeIngredientEntity(e, ing.getName(), ing.getQuantity(), ing.getUnit());
+			RecipeIngredientEntity ie = new RecipeIngredientEntity(e, ing.getName(), ing.getQuantity(), ing.getUnit(), ing.getIngredientId());
 			e.getIngredientEntities().add(ie);
 		}
 		return e;
@@ -67,9 +71,10 @@ public class RecipeRepositoryImpl implements RecipeRepository {
 			.map(se -> new RecipeStep(se.getStepOrder(), se.getInstruction()))
 			.collect(Collectors.toList());
 		List<RecipeIngredient> ingredients = e.getIngredientEntities().stream()
-			.map(ie -> new RecipeIngredient(ie.getName(), ie.getQuantity(), ie.getUnit()))
+			.map(ie -> new RecipeIngredient(ie.getName(), ie.getQuantity(), ie.getUnit(), ie.getIngredientId()))
 			.collect(Collectors.toList());
 		return Recipe.fromPersistence(e.getId(), e.getTitle(), e.getDescription(), e.getDifficulty(),
-			e.getDurationMinutes(), e.getStatus(), e.getCreatedBy(), e.getCreatedAt(), e.getUpdatedAt(), steps, ingredients);
+			e.getDurationMinutes(), e.getStatus(), e.getCreatedBy(), e.getCreatedAt(), e.getUpdatedAt(), steps, ingredients,
+			e.getCountry(), e.getTags(), e.getOriginStory(), e.getAssociatedTechniqueNames());
 	}
 }
