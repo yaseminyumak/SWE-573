@@ -1,4 +1,12 @@
-import { createContext, useContext, type ReactNode } from 'react'
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react'
 import { keycloak } from './keycloak'
 
 type AuthContextValue = {
@@ -21,17 +29,61 @@ type AuthProviderProps = {
   children: ReactNode
 }
 
+function readAuthenticated() {
+  return !!keycloak.authenticated
+}
+
 export function AuthProvider({ children }: AuthProviderProps) {
-  const value: AuthContextValue = {
-    keycloak,
-    login: () => keycloak.login(),
-    register: () => keycloak.register({ redirectUri: window.location.origin + '/' }),
-    logout: () => keycloak.logout(),
-    isAuthenticated: keycloak.authenticated ?? false,
+  const [isAuthenticated, setIsAuthenticated] = useState(readAuthenticated)
+
+  useEffect(() => {
+    const sync = () => setIsAuthenticated(readAuthenticated())
+
+    keycloak.onAuthSuccess = sync
+    keycloak.onAuthError = sync
+    keycloak.onAuthLogout = sync
+    keycloak.onAuthRefreshSuccess = sync
+    keycloak.onAuthRefreshError = sync
+
+    // Catch-up after mount (init completed before first paint, but ordering can differ in prod).
+    sync()
+
+    return () => {
+      keycloak.onAuthSuccess = undefined
+      keycloak.onAuthError = undefined
+      keycloak.onAuthLogout = undefined
+      keycloak.onAuthRefreshSuccess = undefined
+      keycloak.onAuthRefreshError = undefined
+    }
+  }, [])
+
+  const postAuthRedirect = () => {
+    const path = window.location.pathname || '/'
+    return `${window.location.origin}${path.startsWith('/') ? path : `/${path}`}`
   }
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
+
+  const login = useCallback(() => {
+    keycloak.login({ redirectUri: postAuthRedirect() })
+  }, [])
+
+  const register = useCallback(() => {
+    keycloak.register({ redirectUri: postAuthRedirect() })
+  }, [])
+
+  const logout = useCallback(() => {
+    keycloak.logout()
+  }, [])
+
+  const value = useMemo<AuthContextValue>(
+    () => ({
+      keycloak,
+      login,
+      register,
+      logout,
+      isAuthenticated,
+    }),
+    [isAuthenticated, login, register, logout],
   )
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
