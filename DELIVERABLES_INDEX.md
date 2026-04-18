@@ -13,6 +13,7 @@ Central index for SWE-573 (CulinaryGraph) artifacts. Links point to the **defaul
 | **Mockups** | [reports/mock-ups/](https://github.com/yaseminyumak/SWE-573/tree/main/reports/mock-ups) | Screen mockups (PNG) |
 | **Project Plan, Communication Plan, RACI** | [reports/ProjectPlan.md](https://github.com/yaseminyumak/SWE-573/blob/main/reports/ProjectPlan.md) | Phases, sprints, milestones, communication matrix, RACI |
 | **Main contributions** | [reports/RELEASE_NOTES.md](https://github.com/yaseminyumak/SWE-573/blob/main/reports/RELEASE_NOTES.md) · [reports/PROJECT_OVERVIEW.md](https://github.com/yaseminyumak/SWE-573/blob/main/reports/PROJECT_OVERVIEW.md) | Product/architecture summary · implementation & stack overview |
+| **Milestone Review** | [reports/MILESTONE_REVIEW.md](https://github.com/yaseminyumak/SWE-573/blob/main/reports/MILESTONE_REVIEW.md) | Project status, deliverable status, UX, standards, API docs, testing, planning, individual contributions |
 | **Release version** | [reports/RELEASE_NOTES.md](https://github.com/yaseminyumak/SWE-573/blob/main/reports/RELEASE_NOTES.md) · [GitHub Releases](https://github.com/yaseminyumak/SWE-573/releases) | Tagged releases (e.g. `1.0.0-alpha`) |
 | **Short video demo** | [demo.mp4](https://github.com/yaseminyumak/SWE-573/blob/main/demo.mp4) | Raw file in repo; open or download from GitHub |
 
