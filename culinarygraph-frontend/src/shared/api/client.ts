@@ -10,8 +10,11 @@ export async function apiClient<T>(
     'Content-Type': 'application/json',
     ...options?.headers,
   }
-  if (keycloak.authenticated && keycloak.token) {
-    (headers as Record<string, string>)['Authorization'] = `Bearer ${keycloak.token}`
+  if (keycloak.authenticated) {
+    await keycloak.updateToken(30).catch(() => keycloak.login())
+    if (keycloak.token) {
+      (headers as Record<string, string>)['Authorization'] = `Bearer ${keycloak.token}`
+    }
   }
   const res = await fetch(`${API_BASE}${path}`, {
     ...options,
