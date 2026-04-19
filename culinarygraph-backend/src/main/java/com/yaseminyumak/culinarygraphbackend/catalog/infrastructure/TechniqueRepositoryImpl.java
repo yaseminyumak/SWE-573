@@ -53,8 +53,6 @@ public class TechniqueRepositoryImpl implements TechniqueRepository {
 		e.setCountry(technique.getCountry());
 		e.setCulturalNotes(technique.getCulturalNotes());
 		e.setPrerequisites(technique.getPrerequisites());
-		e.setRelatedTechniqueNames(new ArrayList<>(technique.getRelatedTechniqueNames()));
-		e.setRelatedIngredientNames(new ArrayList<>(technique.getRelatedIngredientNames()));
 		e.setStatus(technique.getStatus());
 		e.setCreatedBy(technique.getCreatedBy());
 		e.setCreatedAt(technique.getCreatedAt());
@@ -68,6 +66,11 @@ public class TechniqueRepositoryImpl implements TechniqueRepository {
 			ingredientJpaRepository.findById(ingredientId).ifPresent(ingredientEntities::add);
 		}
 		e.setIngredientEntities(ingredientEntities);
+		Set<TechniqueEntity> relatedTechniques = new HashSet<>();
+		for (UUID relatedId : technique.getRelatedTechniqueIds()) {
+			jpaRepository.findById(relatedId).ifPresent(relatedTechniques::add);
+		}
+		e.setRelatedTechniques(relatedTechniques);
 		return e;
 	}
 
@@ -78,12 +81,20 @@ public class TechniqueRepositoryImpl implements TechniqueRepository {
 		Set<UUID> ingredientIds = e.getIngredientEntities().stream()
 			.map(IngredientEntity::getId)
 			.collect(Collectors.toSet());
+		Set<UUID> relatedTechniqueIds = e.getRelatedTechniques().stream()
+			.map(TechniqueEntity::getId)
+			.collect(Collectors.toSet());
 		return Technique.fromPersistence(
 			e.getId(), e.getName(), e.getDescription(), e.getRegion(),
 			e.getDifficulty(), steps, ingredientIds, e.getCountry(),
 			e.getCulturalNotes(), e.getPrerequisites(),
-			e.getRelatedTechniqueNames(), e.getRelatedIngredientNames(),
+			relatedTechniqueIds,
 			e.getStatus(), e.getCreatedBy(), e.getCreatedAt(), e.getUpdatedAt()
 		);
+	}
+
+	@Override
+	public void delete(Technique technique) {
+		jpaRepository.deleteById(technique.getId());
 	}
 }

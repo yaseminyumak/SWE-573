@@ -13,7 +13,7 @@ export interface IngredientResponse {
   seasons: Season[]
   substitutes: string[]
   provenanceStory: string | null
-  relatedTechniqueNames: string[]
+  relatedTechniqueIds: string[]
   status: PublishStatus
   createdBy: string
   createdAt: string
@@ -36,8 +36,7 @@ export interface TechniqueResponse {
   ingredientIds: string[]
   culturalNotes: string | null
   prerequisites: string | null
-  relatedTechniqueNames: string[]
-  relatedIngredientNames: string[]
+  relatedTechniqueIds: string[]
   status: PublishStatus
   createdBy: string
   createdAt: string
@@ -48,10 +47,10 @@ export interface CreateIngredientRequest {
   name: string
   country?: string
   region?: string
-  seasonality?: string
+  seasons?: Season[]
   provenanceStory?: string
   substitutes?: string[]
-  relatedTechniqueNames?: string[]
+  relatedTechniqueIds?: string[]
 }
 
 export interface CreateTechniqueRequest {
@@ -63,8 +62,7 @@ export interface CreateTechniqueRequest {
   difficulty?: DifficultyLevel
   steps?: { order: number; instruction: string }[]
   ingredientIds?: string[]
-  relatedTechniqueNames?: string[]
-  relatedIngredientNames?: string[]
+  relatedTechniqueIds?: string[]
 }
 
 export async function fetchIngredients(): Promise<IngredientResponse[]> {
@@ -80,6 +78,17 @@ export async function createIngredient(body: CreateIngredientRequest): Promise<I
     method: 'POST',
     body: JSON.stringify(body),
   })
+}
+
+export async function updateIngredient(id: string, body: CreateIngredientRequest): Promise<IngredientResponse> {
+  return apiClient<IngredientResponse>(`/catalog/ingredients/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(body),
+  })
+}
+
+export async function deleteIngredient(id: string): Promise<void> {
+  return apiClient<void>(`/catalog/ingredients/${id}`, { method: 'DELETE' })
 }
 
 export async function archiveIngredient(id: string): Promise<IngredientResponse> {
@@ -99,6 +108,17 @@ export async function createTechnique(body: CreateTechniqueRequest): Promise<Tec
     method: 'POST',
     body: JSON.stringify(body),
   })
+}
+
+export async function updateTechnique(id: string, body: CreateTechniqueRequest): Promise<TechniqueResponse> {
+  return apiClient<TechniqueResponse>(`/catalog/techniques/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(body),
+  })
+}
+
+export async function deleteTechnique(id: string): Promise<void> {
+  return apiClient<void>(`/catalog/techniques/${id}`, { method: 'DELETE' })
 }
 
 export async function archiveTechnique(id: string): Promise<TechniqueResponse> {

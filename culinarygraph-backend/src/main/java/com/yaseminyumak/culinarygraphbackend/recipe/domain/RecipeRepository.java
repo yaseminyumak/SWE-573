@@ -14,4 +14,6 @@ public interface RecipeRepository {
 	Optional<Recipe> findById(UUID id);
 
 	List<Recipe> findAll();
+
+	void delete(Recipe recipe);
 }

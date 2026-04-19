@@ -29,12 +29,15 @@ function App() {
               <Route path="/catalog" element={<CatalogPage />} />
               <Route path="/catalog/ingredients" element={<IngredientListPage />} />
               <Route path="/catalog/ingredients/new" element={<IngredientFormPage />} />
+              <Route path="/catalog/ingredients/:id/edit" element={<IngredientFormPage />} />
               <Route path="/catalog/ingredients/:id" element={<IngredientDetailPage />} />
               <Route path="/catalog/techniques" element={<TechniqueListPage />} />
               <Route path="/catalog/techniques/new" element={<TechniqueFormPage />} />
+              <Route path="/catalog/techniques/:id/edit" element={<TechniqueFormPage />} />
               <Route path="/catalog/techniques/:id" element={<TechniqueDetailPage />} />
               <Route path="/recipes" element={<RecipeListPage />} />
               <Route path="/recipes/new" element={<RecipeFormPage />} />
+              <Route path="/recipes/:id/edit" element={<RecipeFormPage />} />
               <Route path="/recipes/:id" element={<RecipeDetailPage />} />
               <Route path="/search" element={<SearchPage />} />
               <Route path="/profile" element={<ProfilePage />} />

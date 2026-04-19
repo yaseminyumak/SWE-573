@@ -16,7 +16,7 @@ public class Ingredient {
 	private List<String> substitutes;
 	private String provenanceStory;
 	private String country;
-	private List<String> relatedTechniqueNames;
+	private Set<UUID> relatedTechniqueIds;
 	private PublishStatus status;
 	private String createdBy;
 	private final Instant createdAt;
@@ -30,7 +30,7 @@ public class Ingredient {
 	public static Ingredient create(String name, String description, String region,
 	                                Set<Season> seasons, List<String> substitutes,
 	                                String provenanceStory, String country,
-	                                List<String> relatedTechniqueNames, String createdBy) {
+	                                Set<UUID> relatedTechniqueIds, String createdBy) {
 		Objects.requireNonNull(name, "name cannot be null");
 		Objects.requireNonNull(createdBy, "createdBy cannot be null");
 		Ingredient i = new Ingredient(UUID.randomUUID(), Instant.now());
@@ -41,7 +41,7 @@ public class Ingredient {
 		i.substitutes = substitutes != null ? new ArrayList<>(substitutes) : new ArrayList<>();
 		i.provenanceStory = provenanceStory;
 		i.country = country;
-		i.relatedTechniqueNames = relatedTechniqueNames != null ? new ArrayList<>(relatedTechniqueNames) : new ArrayList<>();
+		i.relatedTechniqueIds = relatedTechniqueIds != null ? new HashSet<>(relatedTechniqueIds) : new HashSet<>();
 		i.status = PublishStatus.PUBLISHED;
 		i.createdBy = createdBy;
 		i.updatedAt = i.createdAt;
@@ -51,7 +51,7 @@ public class Ingredient {
 	public static Ingredient fromPersistence(UUID id, String name, String description, String region,
 	                                         Set<Season> seasons, List<String> substitutes,
 	                                         String provenanceStory, String country,
-	                                         List<String> relatedTechniqueNames, PublishStatus status,
+	                                         Set<UUID> relatedTechniqueIds, PublishStatus status,
 	                                         String createdBy, Instant createdAt, Instant updatedAt) {
 		Ingredient i = new Ingredient(id, createdAt);
 		i.name = name;
@@ -61,11 +61,25 @@ public class Ingredient {
 		i.substitutes = substitutes != null ? new ArrayList<>(substitutes) : new ArrayList<>();
 		i.provenanceStory = provenanceStory;
 		i.country = country;
-		i.relatedTechniqueNames = relatedTechniqueNames != null ? new ArrayList<>(relatedTechniqueNames) : new ArrayList<>();
+		i.relatedTechniqueIds = relatedTechniqueIds != null ? new HashSet<>(relatedTechniqueIds) : new HashSet<>();
 		i.status = status != null ? status : PublishStatus.DRAFT;
 		i.createdBy = createdBy;
 		i.updatedAt = updatedAt != null ? updatedAt : createdAt;
 		return i;
+	}
+
+	public void update(String name, String description, String region, Set<Season> seasons,
+	                   List<String> substitutes, String provenanceStory, String country,
+	                   Set<UUID> relatedTechniqueIds) {
+		this.name = name != null ? name.trim() : this.name;
+		this.description = description != null ? description.trim() : "";
+		this.region = region != null ? region.trim() : "";
+		this.seasons = seasons != null ? new HashSet<>(seasons) : new HashSet<>();
+		this.substitutes = substitutes != null ? new ArrayList<>(substitutes) : new ArrayList<>();
+		this.provenanceStory = provenanceStory;
+		this.country = country;
+		this.relatedTechniqueIds = relatedTechniqueIds != null ? new HashSet<>(relatedTechniqueIds) : new HashSet<>();
+		this.updatedAt = Instant.now();
 	}
 
 	public void publish() {
@@ -92,7 +106,7 @@ public class Ingredient {
 	public List<String> getSubstitutes() { return Collections.unmodifiableList(substitutes); }
 	public String getProvenanceStory() { return provenanceStory; }
 	public String getCountry() { return country; }
-	public List<String> getRelatedTechniqueNames() { return Collections.unmodifiableList(relatedTechniqueNames); }
+	public Set<UUID> getRelatedTechniqueIds() { return Collections.unmodifiableSet(relatedTechniqueIds); }
 	public PublishStatus getStatus() { return status; }
 	public String getCreatedBy() { return createdBy; }
 	public Instant getCreatedAt() { return createdAt; }

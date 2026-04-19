@@ -17,7 +17,7 @@ public record IngredientResponse(
 	List<String> substitutes,
 	String provenanceStory,
 	String country,
-	List<String> relatedTechniqueNames,
+	Set<UUID> relatedTechniqueIds,
 	PublishStatus status,
 	String createdBy,
 	Instant createdAt,

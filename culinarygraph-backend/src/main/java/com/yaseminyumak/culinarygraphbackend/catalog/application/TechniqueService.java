@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -41,8 +42,7 @@ public class TechniqueService {
 			request.country(),
 			request.culturalNotes(),
 			request.prerequisites(),
-			request.relatedTechniqueNames(),
-			request.relatedIngredientNames(),
+			request.relatedTechniqueIds() != null ? new HashSet<>(request.relatedTechniqueIds()) : new HashSet<>(),
 			createdBy
 		);
 		return techniqueRepository.save(technique);
@@ -57,6 +57,30 @@ public class TechniqueService {
 	public Technique getById(UUID id) {
 		return techniqueRepository.findById(id)
 			.orElseThrow(() -> new TechniqueNotFoundException(id));
+	}
+
+	@Transactional
+	public Technique update(UUID id, CreateTechniqueRequest request) {
+		Technique technique = getById(id);
+		List<TechniqueStep> steps = request.steps() != null
+			? request.steps().stream()
+				.map(s -> new TechniqueStep(s.order(), s.instruction()))
+				.collect(Collectors.toList())
+			: List.of();
+		technique.update(
+			request.name(), request.description(), request.region(), request.difficulty(),
+			steps,
+			request.ingredientIds() != null ? new HashSet<>(request.ingredientIds()) : new HashSet<>(),
+			request.country(), request.culturalNotes(), request.prerequisites(),
+			request.relatedTechniqueIds() != null ? new HashSet<>(request.relatedTechniqueIds()) : new HashSet<>()
+		);
+		return techniqueRepository.save(technique);
+	}
+
+	@Transactional
+	public void delete(UUID id) {
+		Technique technique = getById(id);
+		techniqueRepository.delete(technique);
 	}
 
 	@Transactional

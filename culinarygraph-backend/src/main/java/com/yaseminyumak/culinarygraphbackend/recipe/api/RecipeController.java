@@ -39,6 +39,18 @@ public class RecipeController {
 		return toResponse(recipe);
 	}
 
+	@PutMapping("/{id}")
+	public RecipeResponse update(@PathVariable UUID id, @Valid @RequestBody CreateRecipeRequest request) {
+		Recipe recipe = recipeService.update(id, request);
+		return toResponse(recipe);
+	}
+
+	@DeleteMapping("/{id}")
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	public void delete(@PathVariable UUID id) {
+		recipeService.delete(id);
+	}
+
 	@PutMapping("/{id}/archive")
 	public RecipeResponse archive(@PathVariable UUID id) {
 		Recipe recipe = recipeService.archive(id);
@@ -66,7 +78,7 @@ public class RecipeController {
 			r.getCountry(),
 			r.getTags(),
 			r.getOriginStory(),
-			r.getAssociatedTechniqueNames()
+			r.getAssociatedTechniqueIds()
 		);
 	}
 }

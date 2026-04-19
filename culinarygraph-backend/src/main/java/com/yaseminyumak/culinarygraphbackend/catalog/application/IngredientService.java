@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Service
@@ -32,7 +33,7 @@ public class IngredientService {
 			request.substitutes(),
 			request.provenanceStory(),
 			request.country(),
-			request.relatedTechniqueNames(),
+			request.relatedTechniqueIds() != null ? new HashSet<>(request.relatedTechniqueIds()) : new HashSet<>(),
 			createdBy
 		);
 		return ingredientRepository.save(ingredient);
@@ -47,6 +48,24 @@ public class IngredientService {
 	public Ingredient getById(UUID id) {
 		return ingredientRepository.findById(id)
 			.orElseThrow(() -> new IngredientNotFoundException(id));
+	}
+
+	@Transactional
+	public Ingredient update(UUID id, CreateIngredientRequest request) {
+		Ingredient ingredient = getById(id);
+		ingredient.update(
+			request.name(), request.description(), request.region(),
+			request.seasons() != null ? new HashSet<>(request.seasons()) : new HashSet<>(),
+			request.substitutes(), request.provenanceStory(), request.country(),
+			request.relatedTechniqueIds() != null ? new HashSet<>(request.relatedTechniqueIds()) : new HashSet<>()
+		);
+		return ingredientRepository.save(ingredient);
+	}
+
+	@Transactional
+	public void delete(UUID id) {
+		Ingredient ingredient = getById(id);
+		ingredientRepository.delete(ingredient);
 	}
 
 	@Transactional

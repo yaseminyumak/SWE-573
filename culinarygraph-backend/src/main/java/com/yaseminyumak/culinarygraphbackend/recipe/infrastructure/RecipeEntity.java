@@ -5,7 +5,9 @@ import com.yaseminyumak.culinarygraphbackend.recipe.domain.PublishStatus;
 import jakarta.persistence.*;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Entity
@@ -55,8 +57,8 @@ public class RecipeEntity {
 
 	@ElementCollection(fetch = FetchType.LAZY)
 	@CollectionTable(name = "recipe_associated_techniques", joinColumns = @JoinColumn(name = "recipe_id"))
-	@Column(name = "technique_name", length = 500)
-	private List<String> associatedTechniqueNames = new ArrayList<>();
+	@Column(name = "technique_id")
+	private Set<UUID> associatedTechniqueIds = new HashSet<>();
 
 	@OneToMany(mappedBy = "recipe", cascade = CascadeType.ALL, orphanRemoval = true)
 	@OrderBy("stepOrder")
@@ -173,11 +175,11 @@ public class RecipeEntity {
 		this.originStory = originStory;
 	}
 
-	public List<String> getAssociatedTechniqueNames() {
-		return associatedTechniqueNames;
+	public Set<UUID> getAssociatedTechniqueIds() {
+		return associatedTechniqueIds;
 	}
 
-	public void setAssociatedTechniqueNames(List<String> associatedTechniqueNames) {
-		this.associatedTechniqueNames = associatedTechniqueNames;
+	public void setAssociatedTechniqueIds(Set<UUID> associatedTechniqueIds) {
+		this.associatedTechniqueIds = associatedTechniqueIds;
 	}
 }

@@ -4,6 +4,7 @@ import com.yaseminyumak.culinarygraphbackend.catalog.domain.DifficultyLevel;
 import jakarta.validation.constraints.NotBlank;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 public record CreateTechniqueRequest(
@@ -16,8 +17,7 @@ public record CreateTechniqueRequest(
 	String country,
 	String culturalNotes,
 	String prerequisites,
-	List<String> relatedTechniqueNames,
-	List<String> relatedIngredientNames
+	Set<UUID> relatedTechniqueIds
 ) {
 	public record StepInput(int order, @NotBlank String instruction) {}
 }

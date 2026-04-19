@@ -53,7 +53,7 @@ public class RecipeRepositoryImpl implements RecipeRepository {
 		e.setCountry(recipe.getCountry());
 		e.setTags(new java.util.ArrayList<>(recipe.getTags()));
 		e.setOriginStory(recipe.getOriginStory());
-		e.setAssociatedTechniqueNames(new java.util.ArrayList<>(recipe.getAssociatedTechniqueNames()));
+		e.setAssociatedTechniqueIds(new java.util.HashSet<>(recipe.getAssociatedTechniqueIds()));
 		int order = 0;
 		for (RecipeStep step : recipe.getSteps()) {
 			RecipeStepEntity se = new RecipeStepEntity(e, order++, step.getInstruction());
@@ -75,6 +75,11 @@ public class RecipeRepositoryImpl implements RecipeRepository {
 			.collect(Collectors.toList());
 		return Recipe.fromPersistence(e.getId(), e.getTitle(), e.getDescription(), e.getDifficulty(),
 			e.getDurationMinutes(), e.getStatus(), e.getCreatedBy(), e.getCreatedAt(), e.getUpdatedAt(), steps, ingredients,
-			e.getCountry(), e.getTags(), e.getOriginStory(), e.getAssociatedTechniqueNames());
+			e.getCountry(), e.getTags(), e.getOriginStory(), e.getAssociatedTechniqueIds());
+	}
+
+	@Override
+	public void delete(Recipe recipe) {
+		jpaRepository.deleteById(recipe.getId());
 	}
 }

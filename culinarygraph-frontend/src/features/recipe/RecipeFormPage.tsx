@@ -1,15 +1,17 @@
-import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { createRecipe } from './recipeApi'
+import { createRecipe, updateRecipe, fetchRecipe } from './recipeApi'
 import type { CreateRecipeRequest, DifficultyLevel } from './recipeApi'
 import { fetchIngredients, fetchTechniques } from '../catalog/catalogApi'
 import RelationPicker from '../../shared/components/RelationPicker'
+import { COUNTRIES } from '../../shared/constants/countries'
 
-const COUNTRIES = ['Select Country', 'France', 'Italy', 'Turkey', 'Japan', 'Mexico', 'India', 'China', 'United States', 'Spain', 'Greece', 'Morocco', 'Thailand', 'Korea', 'Other']
 const DIFFICULTIES: DifficultyLevel[] = ['EASY', 'MEDIUM', 'HARD']
 
 export default function RecipeFormPage() {
+  const { id } = useParams<{ id: string }>()
+  const isEdit = !!id
   const navigate = useNavigate()
   const queryClient = useQueryClient()
 
@@ -26,15 +28,39 @@ export default function RecipeFormPage() {
 
   const { data: catalogIngredients = [] } = useQuery({ queryKey: ['catalog', 'ingredients'], queryFn: fetchIngredients })
   const { data: techniques = [] } = useQuery({ queryKey: ['catalog', 'techniques'], queryFn: fetchTechniques })
+  const { data: existing } = useQuery({
+    queryKey: ['recipes', id],
+    queryFn: () => fetchRecipe(id!),
+    enabled: isEdit,
+  })
 
   const ingredientNames = catalogIngredients.map((i) => i.name)
   const techniqueNames = techniques.map((t) => t.name)
+  const techniqueNameToId = new Map(techniques.map((t) => [t.name, t.id]))
+  const techniqueIdToName = new Map(techniques.map((t) => [t.id, t.name]))
+
+  useEffect(() => {
+    if (!existing) return
+    setTitle(existing.title)
+    setDifficulty(existing.difficulty)
+    setDurationText(existing.durationMinutes != null ? String(existing.durationMinutes) : '')
+    setCountry(existing.country ?? '')
+    setRegion(existing.region ?? '')
+    setIngredients(existing.ingredients.length > 0 ? existing.ingredients.map((i) => ({ name: i.name })) : [{ name: '' }])
+    setAssociatedTechniqueNames(
+      (existing.associatedTechniqueIds ?? []).map((tid) => techniqueIdToName.get(tid) ?? '').filter(Boolean)
+    )
+    setSteps(existing.steps.length > 0 ? existing.steps.map((s) => s.instruction) : [''])
+    setTags((existing.tags ?? []).join(', '))
+    setOriginStory(existing.originStory ?? '')
+  }, [existing])
 
   const mutation = useMutation({
-    mutationFn: (body: CreateRecipeRequest) => createRecipe(body),
-    onSuccess: () => {
+    mutationFn: (body: CreateRecipeRequest) =>
+      isEdit ? updateRecipe(id!, body) : createRecipe(body),
+    onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ['recipes'] })
-      navigate('/recipes')
+      navigate(isEdit ? `/recipes/${data.id}` : '/recipes')
     },
   })
 
@@ -66,7 +92,9 @@ export default function RecipeFormPage() {
       steps: steps
         .filter((s) => s.trim())
         .map((s, i) => ({ order: i, instruction: s.trim() })),
-      associatedTechniqueNames,
+      associatedTechniqueIds: associatedTechniqueNames
+        .map((n) => techniqueNameToId.get(n))
+        .filter((tid): tid is string => tid != null),
       tags: tags.split(',').map((t) => t.trim()).filter(Boolean),
       originStory: originStory.trim() || undefined,
     })
@@ -74,7 +102,7 @@ export default function RecipeFormPage() {
 
   return (
     <div className="max-w-3xl mx-auto px-6 py-6">
-      <h1 className="text-xl font-bold text-[#171433]">Add / Edit Recipe</h1>
+      <h1 className="text-xl font-bold text-[#171433]">{isEdit ? 'Edit Recipe' : 'New Recipe'}</h1>
       <hr className="my-3 border-[#d67ec9]" />
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -86,7 +114,7 @@ export default function RecipeFormPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Difficulty *</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Difficulty</label>
           <select value={difficulty} onChange={(e) => setDifficulty(e.target.value as DifficultyLevel)}
             className="w-full border border-gray-300 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:border-[#8c2d9c]">
             {DIFFICULTIES.map((d) => <option key={d}>{d}</option>)}
@@ -94,14 +122,14 @@ export default function RecipeFormPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Duration *</label>
-          <input type="text" value={durationText} onChange={(e) => setDurationText(e.target.value)}
-            placeholder="e.g., 30 minutes, 1 hour"
+          <label className="block text-sm font-medium text-gray-700 mb-1">Duration (minutes)</label>
+          <input type="number" min={0} value={durationText} onChange={(e) => setDurationText(e.target.value)}
+            placeholder="e.g., 30"
             className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#8c2d9c]" />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Country *</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Country</label>
           <select value={country || 'Select Country'} onChange={(e) => setCountry(e.target.value)}
             className="w-full border border-gray-300 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:border-[#8c2d9c]">
             {COUNTRIES.map((c) => <option key={c}>{c}</option>)}
@@ -121,11 +149,8 @@ export default function RecipeFormPage() {
             {ingredients.map((ing, i) => (
               <div key={i} className="flex gap-2">
                 {ingredientNames.length > 0 ? (
-                  <select
-                    value={ing.name}
-                    onChange={(e) => updateIng(i, e.target.value)}
-                    className="flex-1 border border-gray-300 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:border-[#8c2d9c]"
-                  >
+                  <select value={ing.name} onChange={(e) => updateIng(i, e.target.value)}
+                    className="flex-1 border border-gray-300 rounded px-3 py-2 text-sm bg-white focus:outline-none focus:border-[#8c2d9c]">
                     <option value="">Select ingredient…</option>
                     {ingredientNames.map((n) => <option key={n} value={n}>{n}</option>)}
                   </select>
@@ -184,7 +209,7 @@ export default function RecipeFormPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Origin Story (optional)</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Origin Story</label>
           <textarea value={originStory} onChange={(e) => setOriginStory(e.target.value)}
             rows={4}
             placeholder="Share the story behind this recipe..."
@@ -195,10 +220,14 @@ export default function RecipeFormPage() {
           <p className="text-sm text-red-500">Failed to save. Please try again.</p>
         )}
 
-        <div>
+        <div className="flex gap-3">
           <button type="submit" disabled={mutation.isPending || !title.trim()}
             className="bg-[#8c2d9c] text-white rounded px-5 py-2 text-sm font-medium hover:bg-[#7a2589] disabled:opacity-50 transition-colors">
-            {mutation.isPending ? 'Saving…' : 'Save'}
+            {mutation.isPending ? 'Saving…' : isEdit ? 'Save Changes' : 'Create Recipe'}
+          </button>
+          <button type="button" onClick={() => navigate(-1)}
+            className="border border-gray-300 rounded px-5 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors">
+            Cancel
           </button>
         </div>
       </form>
