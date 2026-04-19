@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 110" role="img" aria-label="CulinaryGraph">
+  <title>CulinaryGraph</title>
+  <g transform="translate(58 55)">
+    <line x1="0" y1="0" x2="-30" y2="-28" stroke="#d67ec9" stroke-width="3" stroke-linecap="round"/>
+    <line x1="0" y1="0" x2="28" y2="24" stroke="#d67ec9" stroke-width="3" stroke-linecap="round"/>
+    <line x1="-30" y1="-28" x2="28" y2="24" stroke="#d67ec9" stroke-width="2.5" stroke-linecap="round" stroke-dasharray="3 5" opacity="0.7"/>
+    <circle cx="0" cy="0" r="16" fill="#8c2d9c"/>
+    <circle cx="-30" cy="-28" r="10" fill="#d67ec9"/>
+    <circle cx="28" cy="24" r="12" fill="#171433"/>
+    <circle cx="-5" cy="-5" r="3.5" fill="#ffffff" fill-opacity="0.4"/>
+  </g>
+  <text x="135" y="68" font-family="'Helvetica Neue', 'Helvetica', Arial, sans-serif" font-size="40" font-weight="700" fill="#171433" letter-spacing="-1">
+    Culinary<tspan fill="#8c2d9c">Graph</tspan>
+  </text>
+</svg>

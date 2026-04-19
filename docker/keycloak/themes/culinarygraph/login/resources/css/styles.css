@@ -1,0 +1,529 @@
+/* =============================================================
+   CulinaryGraph — Keycloak login theme
+   DOM (Keycloak 24, observed):
+     html.login-pf
+       body
+         div.login-pf-page
+           div#kc-header              (hidden)
+           div.card-pf                (the ONLY visible card)
+             header.login-pf-header
+             div#kc-content
+               div#kc-content-wrapper
+                 div#kc-form ...      (form)
+                 div#kc-info          (sign-up / sign-in link)
+   Goals:
+     - Full-page mezze-table photo background with navy/purple overlay
+     - One single white card; #kc-content and #kc-content-wrapper are
+       transparent so we don't get nested "boxes"
+     - Logo inside the card header
+     - Pill inputs / pill gradient CTA / no password eye toggle
+     - Required asterisk stays on label line
+   ============================================================= */
+
+:root {
+  --cg-navy: #171433;
+  --cg-purple: #8c2d9c;
+  --cg-purple-dark: #7a2589;
+  --cg-pink: #d67ec9;
+  --cg-bg: #ede8ee;
+  --cg-white: #ffffff;
+  --cg-text-muted: #5b556e;
+  --cg-text-faint: #8a85a0;
+  --cg-border: #e2dde3;
+  --cg-input-bg: #f7f5f8;
+}
+
+/* ------------------------ Background ------------------------------------
+   Apply to html, body, AND .login-pf-page so we beat any parent rule that
+   sets background on .login-pf-page (and body class is empty in KC 24). */
+
+html,
+html.login-pf,
+body,
+.login-pf-page {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  color: var(--cg-navy);
+  font-family: 'Helvetica Neue', -apple-system, BlinkMacSystemFont,
+    'Segoe UI', Roboto, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  background-image:
+    linear-gradient(135deg,
+      rgba(23, 20, 51, 0.72) 0%,
+      rgba(58, 28, 92, 0.65) 50%,
+      rgba(23, 20, 51, 0.78) 100%),
+    url('../img/mezze-table.jpg') !important;
+  background-position: center center, center center !important;
+  background-size: cover, cover !important;
+  background-repeat: no-repeat, no-repeat !important;
+  background-attachment: fixed, fixed !important;
+  background-color: var(--cg-navy) !important;
+}
+
+/* But .login-pf-page itself is the centering layout container — it should
+   not also paint the photo on top of itself; only html/body do.            */
+.login-pf-page {
+  background-image: none !important;
+  background-color: transparent !important;
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: none;
+  padding: 2.5rem 1.5rem;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  overflow-x: hidden;
+}
+
+/* ------------------------ Hide default header --------------------------- */
+
+#kc-header,
+.login-pf-page-header,
+.kc-logo-text,
+.login-pf-header h1 {
+  display: none !important;
+}
+
+/* Hide the "* Required fields" legend that Keycloak prints on register
+   and similar forms — we don't want a separate required-fields hint. */
+.subtitle,
+span.subtitle,
+#kc-form .subtitle,
+.pf-c-form__helper-text.required-fields,
+.kc-required-fields,
+.required-fields-text {
+  display: none !important;
+}
+
+/* ------------------------ THE single card ------------------------------- */
+
+.card-pf {
+  position: relative;
+  z-index: 2;
+  background: var(--cg-white) !important;
+  border: 1px solid rgba(23, 20, 51, 0.05);
+  border-radius: 18px;
+  box-shadow: 0 24px 60px rgba(23, 20, 51, 0.40),
+              0 6px 16px rgba(23, 20, 51, 0.20);
+  padding: 2.25rem 2rem 1.75rem;
+  width: 100%;
+  max-width: 440px;
+  box-sizing: border-box;
+}
+
+/* Inner wrappers MUST be transparent so we don't get nested cards */
+.login-pf-header,
+#kc-content,
+#kc-content-wrapper,
+#kc-form,
+#kc-form-wrapper,
+#kc-form-login,
+#kc-register-form,
+#kc-reset-password-form,
+#kc-passwd-update-form {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  width: auto !important;
+  max-width: none !important;
+}
+
+/* Logo at the top of the card — centered via auto margins on a block element
+   AND via the flex layout we apply on .card-pf below.                      */
+.card-pf::before {
+  content: '';
+  display: block;
+  width: 220px;
+  max-width: 100%;
+  height: 48px;
+  margin: 0 auto 1.25rem !important;
+  padding: 0 !important;
+  background: url('../img/logo.svg') no-repeat center center;
+  background-size: contain;
+  align-self: center;
+}
+
+/* Force the card to align all header-area children to center; form fields
+   below stretch full width because we set width: 100% explicitly on inputs. */
+.card-pf {
+  display: flex !important;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+/* ------------------------ Typography ------------------------------------ */
+
+.login-pf-header {
+  display: flex !important;
+  flex-direction: column;
+  align-items: center !important;
+  justify-content: center !important;
+  text-align: center !important;
+  width: 100% !important;
+  padding: 0 !important;
+  margin: 0 0 0.25rem !important;
+}
+
+/* On the register page Keycloak wraps the title in Bootstrap grid columns
+   (col-md-10, col-xs-12, etc.), which constrains the title to ~83% width
+   and shifts it left. Reset all grid columns inside the header so the title
+   spans the full card width and centers the same way as on the login page. */
+.login-pf-header > div,
+.login-pf-header [class^="col-"],
+.login-pf-header [class*=" col-"] {
+  width: 100% !important;
+  max-width: 100% !important;
+  flex: 0 0 100% !important;
+  padding: 0 !important;
+  margin: 0 auto !important;
+  float: none !important;
+  text-align: center !important;
+  display: block !important;
+}
+
+#kc-page-title,
+.login-pf-header h1,
+h1#kc-page-title {
+  display: block !important;
+  width: 100% !important;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--cg-navy);
+  margin: 0 auto 0.5rem !important;
+  padding: 0 !important;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  text-align: center !important;
+}
+
+#kc-page-title::after {
+  content: 'Region-aware culinary knowledge — techniques · ingredients · recipes';
+  display: block;
+  margin: 0.5rem auto 0;
+  font-size: 0.8rem;
+  font-weight: 400;
+  color: var(--cg-text-muted);
+  letter-spacing: 0;
+  line-height: 1.4;
+  text-align: center;
+}
+
+#kc-form-login,
+#kc-register-form,
+#kc-reset-password-form,
+#kc-passwd-update-form {
+  margin-top: 1.5rem !important;
+}
+
+/* Labels — keep label text + required asterisk on the SAME line */
+label,
+.pf-c-form__label,
+.control-label {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: nowrap;
+  gap: 0.25rem;
+  margin-bottom: 0.4rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--cg-navy);
+  white-space: nowrap;
+}
+
+.pf-c-form__label-text {
+  display: inline;
+}
+
+.pf-c-form__label-required,
+.required,
+label .required,
+label > span:last-child {
+  display: inline;
+  color: var(--cg-purple);
+  margin-left: 0.15rem;
+  white-space: nowrap;
+}
+
+/* ------------------------ Form fields (pill style) --------------------- */
+
+.pf-c-form-control,
+input[type="text"],
+input[type="password"],
+input[type="email"],
+input[type="number"],
+input[type="tel"],
+select,
+textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.7rem 1rem;
+  margin-bottom: 0.85rem;
+  border: 1px solid var(--cg-border);
+  border-radius: 999px;
+  background: var(--cg-input-bg);
+  color: var(--cg-navy);
+  font-size: 0.95rem;
+  font-family: inherit;
+  transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+}
+
+textarea {
+  border-radius: 16px;
+  resize: vertical;
+}
+
+.pf-c-form-control:focus,
+input[type="text"]:focus,
+input[type="password"]:focus,
+input[type="email"]:focus,
+input[type="number"]:focus,
+input[type="tel"]:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  background: var(--cg-white);
+  border-color: var(--cg-purple);
+  box-shadow: 0 0 0 3px rgba(140, 45, 156, 0.15);
+}
+
+input::placeholder {
+  color: var(--cg-text-faint);
+}
+
+/* Hide Keycloak's password show/hide eye toggle + flatten the input-group */
+button[data-password-toggle],
+.pf-c-input-group button.pf-c-button.pf-m-control,
+.pf-c-input-group .pf-c-button.pf-m-control,
+.pf-c-input-group .pf-c-button {
+  display: none !important;
+}
+
+.pf-c-input-group {
+  display: block !important;
+}
+
+.pf-c-input-group input {
+  width: 100% !important;
+  border-radius: 999px !important;
+}
+
+/* Inline form options (remember-me + forgot password) */
+.login-pf-settings,
+.kc-form-options,
+#kc-form-options {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0.25rem 0.25rem 1.25rem;
+  font-size: 0.85rem;
+  color: var(--cg-text-muted);
+}
+
+.checkbox label,
+.kc-form-options label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 400;
+  color: var(--cg-text-muted);
+  margin-bottom: 0;
+  white-space: normal;
+}
+
+/* ------------------------ Buttons (pill CTA) --------------------------- */
+
+.pf-c-button.pf-m-primary,
+input[type="submit"].pf-c-button,
+input[type="submit"].btn-primary,
+.btn-primary,
+button.btn-primary {
+  width: 100%;
+  padding: 0.85rem 1.25rem;
+  border: none;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--cg-purple) 0%, var(--cg-pink) 100%);
+  color: var(--cg-white);
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  font-family: inherit;
+  cursor: pointer;
+  transition: filter 0.15s, transform 0.05s, box-shadow 0.15s;
+  box-shadow: 0 8px 22px rgba(140, 45, 156, 0.30);
+}
+
+.pf-c-button.pf-m-primary:hover,
+input[type="submit"].btn-primary:hover,
+.btn-primary:hover {
+  filter: brightness(0.96);
+  box-shadow: 0 10px 26px rgba(140, 45, 156, 0.35);
+}
+
+.pf-c-button.pf-m-primary:active,
+input[type="submit"].btn-primary:active,
+.btn-primary:active {
+  transform: translateY(1px);
+  box-shadow: 0 4px 12px rgba(140, 45, 156, 0.25);
+}
+
+.pf-c-button.pf-m-primary:focus-visible,
+.btn-primary:focus-visible {
+  outline: 3px solid rgba(214, 126, 201, 0.55);
+  outline-offset: 2px;
+}
+
+.pf-c-button.pf-m-secondary,
+.btn-default,
+button.btn-default {
+  background: transparent;
+  color: var(--cg-purple);
+  border: 1px solid var(--cg-purple);
+  border-radius: 999px;
+  padding: 0.7rem 1.25rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.pf-c-button.pf-m-secondary:hover,
+.btn-default:hover {
+  background: rgba(140, 45, 156, 0.08);
+}
+
+/* ------------------------ Links ---------------------------------------- */
+
+a {
+  color: var(--cg-purple);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+a:hover {
+  color: var(--cg-purple-dark);
+  text-decoration: underline;
+}
+
+/* ------------------------ #kc-info (sign-up link, INSIDE the card) ----- */
+
+#kc-info {
+  margin: 1.25rem 0 0 !important;
+  padding-top: 1rem !important;
+  border-top: 1px solid var(--cg-border) !important;
+  font-size: 0.9rem;
+  color: var(--cg-text-muted);
+  text-align: center;
+}
+
+#kc-info-wrapper {
+  text-align: center;
+}
+
+/* Social providers (if enabled) */
+#kc-social-providers ul {
+  list-style: none;
+  padding: 0;
+  margin: 1.25rem 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+}
+
+#kc-social-providers a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: 1px solid var(--cg-border);
+  border-radius: 999px;
+  padding: 0.55rem 1rem;
+  background: var(--cg-white);
+  color: var(--cg-navy);
+  font-weight: 500;
+}
+
+#kc-social-providers a:hover {
+  border-color: var(--cg-purple);
+  color: var(--cg-purple);
+  text-decoration: none;
+}
+
+/* ------------------------ Alerts / messages ---------------------------- */
+
+.alert,
+.pf-c-alert {
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+.alert-error,
+.pf-c-alert.pf-m-danger {
+  background: #fdecef;
+  border: 1px solid #f1c1ca;
+  color: #8a1f2b;
+}
+
+.alert-success,
+.pf-c-alert.pf-m-success {
+  background: #ecfaf3;
+  border: 1px solid #b8e6cf;
+  color: #1f6b4b;
+}
+
+.alert-warning,
+.pf-c-alert.pf-m-warning {
+  background: #fff7e6;
+  border: 1px solid #f5d89a;
+  color: #7a4d00;
+}
+
+.alert-info,
+.pf-c-alert.pf-m-info {
+  background: #eef0fb;
+  border: 1px solid #c8cee8;
+  color: #2b3270;
+}
+
+/* ------------------------ Locale switch -------------------------------- */
+
+#kc-locale {
+  position: fixed;
+  top: 1rem;
+  right: 1.25rem;
+  z-index: 5;
+}
+
+#kc-locale ul {
+  background: var(--cg-white);
+  border: 1px solid var(--cg-border);
+  border-radius: 12px;
+  list-style: none;
+  padding: 0.25rem 0;
+  margin: 0;
+  box-shadow: 0 4px 14px rgba(23, 20, 51, 0.30);
+}
+
+#kc-locale a {
+  color: var(--cg-navy);
+  padding: 0.35rem 0.85rem;
+  display: block;
+}
+
+#kc-locale a:hover {
+  background: rgba(140, 45, 156, 0.08);
+  color: var(--cg-purple);
+  text-decoration: none;
+}
