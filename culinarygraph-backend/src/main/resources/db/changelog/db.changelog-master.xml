@@ -9,4 +9,6 @@
     <include file="v1.1.0-create-catalog.sql" relativeToChangelogFile="true"/>
     <include file="v1.2.0-recipe-ingredient-catalog-link.sql" relativeToChangelogFile="true"/>
     <include file="v1.3.0-add-extended-fields.sql" relativeToChangelogFile="true"/>
+    <include file="v1.4.0-add-images.sql" relativeToChangelogFile="true"/>
+    <include file="v1.5.0-id-based-relations.sql" relativeToChangelogFile="true"/>
 </databaseChangeLog>

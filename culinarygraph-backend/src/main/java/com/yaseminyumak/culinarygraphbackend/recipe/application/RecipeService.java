@@ -6,7 +6,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -39,7 +41,7 @@ public class RecipeService {
 			request.country(),
 			request.tags(),
 			request.originStory(),
-			request.associatedTechniqueNames()
+			request.associatedTechniqueIds() != null ? new HashSet<>(request.associatedTechniqueIds()) : new HashSet<>()
 		);
 		return recipeRepository.save(recipe);
 	}
@@ -53,6 +55,29 @@ public class RecipeService {
 	public Recipe getById(UUID id) {
 		return recipeRepository.findById(id)
 			.orElseThrow(() -> new RecipeNotFoundException(id));
+	}
+
+	@Transactional
+	public Recipe update(UUID id, CreateRecipeRequest request) {
+		Recipe recipe = getById(id);
+		List<RecipeStep> steps = request.steps().stream()
+			.map(s -> new RecipeStep(s.order(), s.instruction()))
+			.collect(Collectors.toList());
+		List<RecipeIngredient> ingredients = request.ingredients().stream()
+			.map(i -> new RecipeIngredient(i.name(), i.quantity(), i.unit(), i.ingredientId()))
+			.collect(Collectors.toList());
+		recipe.update(
+			request.title(), request.description(), request.difficulty(), request.durationMinutes(),
+			steps, ingredients, request.country(), request.tags(), request.originStory(),
+			request.associatedTechniqueIds() != null ? new HashSet<>(request.associatedTechniqueIds()) : new HashSet<>()
+		);
+		return recipeRepository.save(recipe);
+	}
+
+	@Transactional
+	public void delete(UUID id) {
+		Recipe recipe = getById(id);
+		recipeRepository.delete(recipe);
 	}
 
 	@Transactional

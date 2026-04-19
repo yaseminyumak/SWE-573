@@ -1,30 +1,75 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { fetchIngredients } from './catalogApi'
 import { useAuth } from '../../auth/AuthProvider'
+import EntityCardImage from '../../shared/components/EntityCardImage'
 
-const SEASONS = ['All Seasons', 'SPRING', 'SUMMER', 'FALL', 'WINTER', 'YEAR_ROUND']
+const SEASONS = ['SPRING', 'SUMMER', 'FALL', 'WINTER', 'YEAR_ROUND']
+const SEASON_LABELS: Record<string, string> = {
+  SPRING: 'Spring', SUMMER: 'Summer', FALL: 'Fall', WINTER: 'Winter', YEAR_ROUND: 'Year Round',
+}
+
+function CheckboxGroup({ options, selected, onChange, labelFn }: {
+  options: string[]
+  selected: string[]
+  onChange: (v: string[]) => void
+  labelFn?: (o: string) => string
+}) {
+  const toggle = (opt: string) =>
+    onChange(selected.includes(opt) ? selected.filter((s) => s !== opt) : [...selected, opt])
+  return (
+    <div className="space-y-1.5">
+      {options.map((opt) => (
+        <label key={opt} className="flex items-center gap-2 cursor-pointer group">
+          <input
+            type="checkbox"
+            checked={selected.includes(opt)}
+            onChange={() => toggle(opt)}
+            className="accent-[#8c2d9c] w-3.5 h-3.5 flex-shrink-0"
+          />
+          <span className="text-xs text-gray-600 group-hover:text-[#8c2d9c] leading-tight">
+            {labelFn ? labelFn(opt) : opt}
+          </span>
+        </label>
+      ))}
+    </div>
+  )
+}
 
 export default function IngredientListPage() {
   const { isAuthenticated } = useAuth()
-  const [country, setCountry] = useState('')
+  const [selCountries, setSelCountries] = useState<string[]>([])
   const [region, setRegion] = useState('')
-  const [season, setSeason] = useState('All Seasons')
-  const [applied, setApplied] = useState({ country: '', region: '', season: 'All Seasons' })
+  const [selSeasons, setSelSeasons] = useState<string[]>([])
+  const [applied, setApplied] = useState({
+    countries: [] as string[], region: '', seasons: [] as string[],
+  })
 
   const { data: ingredients, isLoading, error } = useQuery({
     queryKey: ['catalog', 'ingredients'],
     queryFn: fetchIngredients,
   })
 
-  const applyFilters = () => setApplied({ country, region, season })
+  const countryOptions = useMemo(() => {
+    const set = new Set(ingredients?.map((i) => i.country).filter(Boolean) as string[])
+    return Array.from(set).sort()
+  }, [ingredients])
+
+  const applyFilters = () => setApplied({ countries: selCountries, region, seasons: selSeasons })
+
+  const clearFilters = () => {
+    setSelCountries([]); setRegion(''); setSelSeasons([])
+    setApplied({ countries: [], region: '', seasons: [] })
+  }
+
+  const hasActiveFilters = applied.countries.length > 0 || applied.region || applied.seasons.length > 0
 
   const filtered = ingredients?.filter((ing) => {
+    if (applied.countries.length > 0 && !applied.countries.includes(ing.country ?? '')) return false
     const loc = `${ing.country ?? ''} ${ing.region ?? ''}`.toLowerCase()
-    if (applied.country && !loc.includes(applied.country.toLowerCase())) return false
     if (applied.region && !loc.includes(applied.region.toLowerCase())) return false
-    if (applied.season !== 'All Seasons' && !ing.seasons?.includes(applied.season as any)) return false
+    if (applied.seasons.length > 0 && !applied.seasons.some((s) => ing.seasons?.includes(s as any))) return false
     return true
   }) ?? []
 
@@ -35,16 +80,14 @@ export default function IngredientListPage() {
         <aside className="w-44 flex-shrink-0">
           <div className="bg-white border border-gray-200 rounded-lg p-4 space-y-4 shadow-sm">
             <p className="font-bold text-sm text-[#171433]">Filters</p>
-            <div>
-              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Country</label>
-              <select
-                value={country || 'All Countries'}
-                onChange={(e) => setCountry(e.target.value === 'All Countries' ? '' : e.target.value)}
-                className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm bg-white focus:outline-none focus:border-[#8c2d9c]"
-              >
-                <option>All Countries</option>
-              </select>
-            </div>
+
+            {countryOptions.length > 0 && (
+              <div>
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Country</label>
+                <CheckboxGroup options={countryOptions} selected={selCountries} onChange={setSelCountries} />
+              </div>
+            )}
+
             <div>
               <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Region</label>
               <input
@@ -55,22 +98,31 @@ export default function IngredientListPage() {
                 className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:border-[#8c2d9c]"
               />
             </div>
+
             <div>
-              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Season</label>
-              <select
-                value={season}
-                onChange={(e) => setSeason(e.target.value)}
-                className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm bg-white focus:outline-none focus:border-[#8c2d9c]"
-              >
-                {SEASONS.map((s) => <option key={s}>{s}</option>)}
-              </select>
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Season</label>
+              <CheckboxGroup
+                options={SEASONS}
+                selected={selSeasons}
+                onChange={setSelSeasons}
+                labelFn={(s) => SEASON_LABELS[s] ?? s}
+              />
             </div>
+
             <button
               onClick={applyFilters}
               className="w-full bg-[#8c2d9c] text-white rounded px-3 py-1.5 text-sm font-medium hover:bg-[#7a2589] transition-colors"
             >
               Apply Filters
             </button>
+            {hasActiveFilters && (
+              <button
+                onClick={clearFilters}
+                className="w-full text-xs text-gray-400 hover:text-[#8c2d9c] transition-colors py-0.5"
+              >
+                Clear all filters
+              </button>
+            )}
           </div>
         </aside>
 
@@ -95,11 +147,14 @@ export default function IngredientListPage() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {filtered.map((ing) => (
                 <Link key={ing.id} to={`/catalog/ingredients/${ing.id}`}
-                  className="border border-gray-200 rounded-lg bg-white p-5 hover:border-[#8c2d9c] hover:shadow-sm transition-all group">
-                  <p className="font-bold text-sm text-[#171433] group-hover:text-[#8c2d9c]">{ing.name}</p>
-                  <p className="text-xs text-gray-400 mt-1">
-                    {[ing.country, ing.region].filter(Boolean).join(', ') || 'No region'}
-                  </p>
+                  className="border border-gray-200 rounded-xl bg-white hover:border-[#8c2d9c] hover:shadow-md transition-all group overflow-hidden flex flex-col">
+                  <EntityCardImage entityType="INGREDIENT" entityId={ing.id} />
+                  <div className="p-4">
+                    <p className="font-bold text-sm text-[#171433] group-hover:text-[#8c2d9c] leading-snug">{ing.name}</p>
+                    <p className="text-xs text-gray-400 mt-1">
+                      {[ing.country, ing.region].filter(Boolean).join(', ') || 'No region'}
+                    </p>
+                  </div>
                 </Link>
               ))}
             </div>

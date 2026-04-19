@@ -5,11 +5,11 @@ import com.yaseminyumak.culinarygraphbackend.catalog.domain.PublishStatus;
 import jakarta.persistence.*;
 
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
+import java.util.ArrayList;
 
 @Entity
 @Table(name = "techniques")
@@ -53,15 +53,13 @@ public class TechniqueEntity {
 	@Column(name = "prerequisites", columnDefinition = "TEXT")
 	private String prerequisites;
 
-	@ElementCollection(fetch = FetchType.LAZY)
-	@CollectionTable(name = "technique_related_techniques", joinColumns = @JoinColumn(name = "technique_id"))
-	@Column(name = "technique_name", length = 500)
-	private List<String> relatedTechniqueNames = new ArrayList<>();
-
-	@ElementCollection(fetch = FetchType.LAZY)
-	@CollectionTable(name = "technique_related_ingredient_names", joinColumns = @JoinColumn(name = "technique_id"))
-	@Column(name = "ingredient_name", length = 500)
-	private List<String> relatedIngredientNames = new ArrayList<>();
+	@ManyToMany(fetch = FetchType.LAZY)
+	@JoinTable(
+		name = "technique_related_techniques",
+		joinColumns = @JoinColumn(name = "technique_id"),
+		inverseJoinColumns = @JoinColumn(name = "related_technique_id")
+	)
+	private Set<TechniqueEntity> relatedTechniques = new HashSet<>();
 
 	@Enumerated(EnumType.STRING)
 	@Column(name = "status", nullable = false, length = 20)
@@ -98,10 +96,8 @@ public class TechniqueEntity {
 	public void setCulturalNotes(String culturalNotes) { this.culturalNotes = culturalNotes; }
 	public String getPrerequisites() { return prerequisites; }
 	public void setPrerequisites(String prerequisites) { this.prerequisites = prerequisites; }
-	public List<String> getRelatedTechniqueNames() { return relatedTechniqueNames; }
-	public void setRelatedTechniqueNames(List<String> relatedTechniqueNames) { this.relatedTechniqueNames = relatedTechniqueNames; }
-	public List<String> getRelatedIngredientNames() { return relatedIngredientNames; }
-	public void setRelatedIngredientNames(List<String> relatedIngredientNames) { this.relatedIngredientNames = relatedIngredientNames; }
+	public Set<TechniqueEntity> getRelatedTechniques() { return relatedTechniques; }
+	public void setRelatedTechniques(Set<TechniqueEntity> relatedTechniques) { this.relatedTechniques = relatedTechniques; }
 	public PublishStatus getStatus() { return status; }
 	public void setStatus(PublishStatus status) { this.status = status; }
 	public String getCreatedBy() { return createdBy; }

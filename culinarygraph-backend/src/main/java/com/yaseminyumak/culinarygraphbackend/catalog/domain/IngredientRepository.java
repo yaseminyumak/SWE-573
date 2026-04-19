@@ -8,4 +8,5 @@ public interface IngredientRepository {
 	Ingredient save(Ingredient ingredient);
 	Optional<Ingredient> findById(UUID id);
 	List<Ingredient> findAll();
+	void delete(Ingredient ingredient);
 }

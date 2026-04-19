@@ -39,6 +39,17 @@ public class IngredientController {
 		return toResponse(ingredientService.getById(id));
 	}
 
+	@PutMapping("/{id}")
+	public IngredientResponse update(@PathVariable UUID id, @Valid @RequestBody CreateIngredientRequest request) {
+		return toResponse(ingredientService.update(id, request));
+	}
+
+	@DeleteMapping("/{id}")
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	public void delete(@PathVariable UUID id) {
+		ingredientService.delete(id);
+	}
+
 	@PutMapping("/{id}/archive")
 	public IngredientResponse archive(@PathVariable UUID id) {
 		return toResponse(ingredientService.archive(id));
@@ -52,7 +63,7 @@ public class IngredientController {
 		return new IngredientResponse(
 			i.getId(), i.getName(), i.getDescription(), i.getRegion(),
 			i.getSeasons(), i.getSubstitutes(), i.getProvenanceStory(),
-			i.getCountry(), i.getRelatedTechniqueNames(),
+			i.getCountry(), i.getRelatedTechniqueIds(),
 			i.getStatus(), i.getCreatedBy(), i.getCreatedAt(), i.getUpdatedAt()
 		);
 	}

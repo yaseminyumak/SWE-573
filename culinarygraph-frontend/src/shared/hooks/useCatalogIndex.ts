@@ -2,7 +2,7 @@ import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { fetchIngredients, fetchTechniques } from '../../features/catalog/catalogApi'
 
-/** Returns name→id maps for ingredients and techniques, resolved from cached catalog queries. */
+/** Returns name→id and id→name maps for ingredients and techniques. */
 export function useCatalogIndex() {
   const { data: ingredients = [] } = useQuery({ queryKey: ['catalog', 'ingredients'], queryFn: fetchIngredients })
   const { data: techniques = [] } = useQuery({ queryKey: ['catalog', 'techniques'], queryFn: fetchTechniques })
@@ -15,6 +15,14 @@ export function useCatalogIndex() {
     () => new Map(techniques.map((t) => [t.name, t.id])),
     [techniques],
   )
+  const ingredientById = useMemo(
+    () => new Map(ingredients.map((i) => [i.id, i.name])),
+    [ingredients],
+  )
+  const techniqueById = useMemo(
+    () => new Map(techniques.map((t) => [t.id, t.name])),
+    [techniques],
+  )
 
-  return { ingredientByName, techniqueByName }
+  return { ingredientByName, techniqueByName, ingredientById, techniqueById }
 }

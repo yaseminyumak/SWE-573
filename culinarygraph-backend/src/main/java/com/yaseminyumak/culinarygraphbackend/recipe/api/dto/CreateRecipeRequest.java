@@ -5,6 +5,7 @@ import com.yaseminyumak.culinarygraphbackend.recipe.domain.PublishStatus;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 public record CreateRecipeRequest(
@@ -17,7 +18,7 @@ public record CreateRecipeRequest(
 	String country,
 	List<String> tags,
 	String originStory,
-	List<String> associatedTechniqueNames
+	Set<UUID> associatedTechniqueIds
 ) {
 	public record StepInput(int order, @NotBlank String instruction) {}
 	public record IngredientInput(@NotBlank String name, String quantity, String unit, UUID ingredientId) {}

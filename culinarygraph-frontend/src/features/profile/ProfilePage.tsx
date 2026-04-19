@@ -1,12 +1,16 @@
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../auth/AuthProvider'
-import { fetchIngredients, fetchTechniques } from '../catalog/catalogApi'
-import { fetchRecipes } from '../recipe/recipeApi'
+import { fetchIngredients, fetchTechniques, deleteIngredient, deleteTechnique } from '../catalog/catalogApi'
+import { fetchRecipes, deleteRecipe } from '../recipe/recipeApi'
+import ConfirmModal from '../../shared/components/ConfirmModal'
 
 export default function ProfilePage() {
   const { keycloak, isAuthenticated } = useAuth()
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
+  const [confirmState, setConfirmState] = useState<{ label: string; onConfirm: () => void } | null>(null)
 
   const userId = keycloak.subject
   const username = keycloak.tokenParsed?.preferred_username ?? keycloak.tokenParsed?.sub ?? 'User'
@@ -15,6 +19,23 @@ export default function ProfilePage() {
   const { data: ingredients } = useQuery({ queryKey: ['catalog', 'ingredients'], queryFn: fetchIngredients })
   const { data: techniques } = useQuery({ queryKey: ['catalog', 'techniques'], queryFn: fetchTechniques })
   const { data: recipes } = useQuery({ queryKey: ['recipes'], queryFn: fetchRecipes })
+
+  const delIngredient = useMutation({
+    mutationFn: (id: string) => deleteIngredient(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['catalog', 'ingredients'] }),
+  })
+  const delTechnique = useMutation({
+    mutationFn: (id: string) => deleteTechnique(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['catalog', 'techniques'] }),
+  })
+  const delRecipe = useMutation({
+    mutationFn: (id: string) => deleteRecipe(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['recipes'] }),
+  })
+
+  const confirmDelete = (label: string, onConfirm: () => void) => {
+    setConfirmState({ label, onConfirm })
+  }
 
   if (!isAuthenticated) {
     return (
@@ -29,6 +50,14 @@ export default function ProfilePage() {
   const myRecipes = recipes?.filter((r) => r.createdBy === userId) ?? []
 
   return (
+    <>
+    {confirmState && (
+      <ConfirmModal
+        label={confirmState.label}
+        onConfirm={() => { confirmState.onConfirm(); setConfirmState(null) }}
+        onCancel={() => setConfirmState(null)}
+      />
+    )}
     <div className="max-w-3xl mx-auto px-6 py-8">
       <h1 className="text-2xl font-bold text-[#171433]">Profile</h1>
       <hr className="my-4 border-[#d67ec9]" />
@@ -55,12 +84,14 @@ export default function ProfilePage() {
                 <span className="text-sm text-gray-700">Technique {i + 1}: <span className="font-medium">{t.name}</span></span>
                 <div className="flex gap-2">
                   <button
-                    onClick={() => navigate(`/catalog/techniques/${t.id}`)}
+                    onClick={() => navigate(`/catalog/techniques/${t.id}/edit`)}
                     className="border border-gray-300 rounded px-3 py-1 text-xs font-medium text-gray-700 hover:border-[#8c2d9c] hover:text-[#8c2d9c] transition-colors"
                   >Edit</button>
-                  <button className="border border-gray-300 rounded px-3 py-1 text-xs font-medium text-gray-700 hover:border-red-400 hover:text-red-500 transition-colors">
-                    Delete
-                  </button>
+                  <button
+                    onClick={() => confirmDelete(t.name, () => delTechnique.mutate(t.id))}
+                    disabled={delTechnique.isPending}
+                    className="border border-gray-300 rounded px-3 py-1 text-xs font-medium text-gray-700 hover:border-red-400 hover:text-red-500 transition-colors disabled:opacity-50"
+                  >Delete</button>
                 </div>
               </div>
             ))}
@@ -80,12 +111,14 @@ export default function ProfilePage() {
                 <span className="text-sm text-gray-700">Ingredient {i + 1}: <span className="font-medium">{ing.name}</span></span>
                 <div className="flex gap-2">
                   <button
-                    onClick={() => navigate(`/catalog/ingredients/${ing.id}`)}
+                    onClick={() => navigate(`/catalog/ingredients/${ing.id}/edit`)}
                     className="border border-gray-300 rounded px-3 py-1 text-xs font-medium text-gray-700 hover:border-[#8c2d9c] hover:text-[#8c2d9c] transition-colors"
                   >Edit</button>
-                  <button className="border border-gray-300 rounded px-3 py-1 text-xs font-medium text-gray-700 hover:border-red-400 hover:text-red-500 transition-colors">
-                    Delete
-                  </button>
+                  <button
+                    onClick={() => confirmDelete(ing.name, () => delIngredient.mutate(ing.id))}
+                    disabled={delIngredient.isPending}
+                    className="border border-gray-300 rounded px-3 py-1 text-xs font-medium text-gray-700 hover:border-red-400 hover:text-red-500 transition-colors disabled:opacity-50"
+                  >Delete</button>
                 </div>
               </div>
             ))}
@@ -105,12 +138,14 @@ export default function ProfilePage() {
                 <span className="text-sm text-gray-700">Recipe {i + 1}: <span className="font-medium">{r.title}</span></span>
                 <div className="flex gap-2">
                   <button
-                    onClick={() => navigate(`/recipes/${r.id}`)}
+                    onClick={() => navigate(`/recipes/${r.id}/edit`)}
                     className="border border-gray-300 rounded px-3 py-1 text-xs font-medium text-gray-700 hover:border-[#8c2d9c] hover:text-[#8c2d9c] transition-colors"
                   >Edit</button>
-                  <button className="border border-gray-300 rounded px-3 py-1 text-xs font-medium text-gray-700 hover:border-red-400 hover:text-red-500 transition-colors">
-                    Delete
-                  </button>
+                  <button
+                    onClick={() => confirmDelete(r.title, () => delRecipe.mutate(r.id))}
+                    disabled={delRecipe.isPending}
+                    className="border border-gray-300 rounded px-3 py-1 text-xs font-medium text-gray-700 hover:border-red-400 hover:text-red-500 transition-colors disabled:opacity-50"
+                  >Delete</button>
                 </div>
               </div>
             ))}
@@ -118,5 +153,6 @@ export default function ProfilePage() {
         )}
       </section>
     </div>
+    </>
   )
 }

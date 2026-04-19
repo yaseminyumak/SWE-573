@@ -39,6 +39,17 @@ public class TechniqueController {
 		return toResponse(techniqueService.getById(id));
 	}
 
+	@PutMapping("/{id}")
+	public TechniqueResponse update(@PathVariable UUID id, @Valid @RequestBody CreateTechniqueRequest request) {
+		return toResponse(techniqueService.update(id, request));
+	}
+
+	@DeleteMapping("/{id}")
+	@ResponseStatus(HttpStatus.NO_CONTENT)
+	public void delete(@PathVariable UUID id) {
+		techniqueService.delete(id);
+	}
+
 	@PutMapping("/{id}/archive")
 	public TechniqueResponse archive(@PathVariable UUID id) {
 		return toResponse(techniqueService.archive(id));
@@ -55,7 +66,7 @@ public class TechniqueController {
 			t.getSteps().stream().map(s -> new TechniqueResponse.StepDto(s.getOrder(), s.getInstruction())).toList(),
 			t.getIngredientIds(),
 			t.getCountry(), t.getCulturalNotes(), t.getPrerequisites(),
-			t.getRelatedTechniqueNames(), t.getRelatedIngredientNames(),
+			t.getRelatedTechniqueIds(),
 			t.getStatus(), t.getCreatedBy(), t.getCreatedAt(), t.getUpdatedAt()
 		);
 	}

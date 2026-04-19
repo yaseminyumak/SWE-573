@@ -18,8 +18,7 @@ public class Technique {
 	private String country;
 	private String culturalNotes;
 	private String prerequisites;
-	private List<String> relatedTechniqueNames;
-	private List<String> relatedIngredientNames;
+	private Set<UUID> relatedTechniqueIds;
 	private PublishStatus status;
 	private String createdBy;
 	private final Instant createdAt;
@@ -30,15 +29,14 @@ public class Technique {
 		this.createdAt = createdAt;
 		this.steps = new ArrayList<>(steps);
 		this.ingredientIds = new HashSet<>(ingredientIds);
-		this.relatedTechniqueNames = new ArrayList<>();
-		this.relatedIngredientNames = new ArrayList<>();
+		this.relatedTechniqueIds = new HashSet<>();
 	}
 
 	public static Technique create(String name, String description, String region,
 	                               DifficultyLevel difficulty, List<TechniqueStep> steps,
 	                               Set<UUID> ingredientIds, String country, String culturalNotes,
-	                               String prerequisites, List<String> relatedTechniqueNames,
-	                               List<String> relatedIngredientNames, String createdBy) {
+	                               String prerequisites, Set<UUID> relatedTechniqueIds,
+	                               String createdBy) {
 		Objects.requireNonNull(name, "name cannot be null");
 		Objects.requireNonNull(createdBy, "createdBy cannot be null");
 		Technique t = new Technique(UUID.randomUUID(), Instant.now(),
@@ -51,8 +49,7 @@ public class Technique {
 		t.country = country;
 		t.culturalNotes = culturalNotes;
 		t.prerequisites = prerequisites;
-		t.relatedTechniqueNames = relatedTechniqueNames != null ? new ArrayList<>(relatedTechniqueNames) : new ArrayList<>();
-		t.relatedIngredientNames = relatedIngredientNames != null ? new ArrayList<>(relatedIngredientNames) : new ArrayList<>();
+		t.relatedTechniqueIds = relatedTechniqueIds != null ? new HashSet<>(relatedTechniqueIds) : new HashSet<>();
 		t.status = PublishStatus.PUBLISHED;
 		t.createdBy = createdBy;
 		t.updatedAt = t.createdAt;
@@ -62,8 +59,8 @@ public class Technique {
 	public static Technique fromPersistence(UUID id, String name, String description, String region,
 	                                        DifficultyLevel difficulty, List<TechniqueStep> steps,
 	                                        Set<UUID> ingredientIds, String country, String culturalNotes,
-	                                        String prerequisites, List<String> relatedTechniqueNames,
-	                                        List<String> relatedIngredientNames, PublishStatus status,
+	                                        String prerequisites, Set<UUID> relatedTechniqueIds,
+	                                        PublishStatus status,
 	                                        String createdBy, Instant createdAt, Instant updatedAt) {
 		Technique t = new Technique(id, createdAt,
 			steps != null ? steps : List.of(),
@@ -75,12 +72,29 @@ public class Technique {
 		t.country = country;
 		t.culturalNotes = culturalNotes;
 		t.prerequisites = prerequisites;
-		t.relatedTechniqueNames = relatedTechniqueNames != null ? new ArrayList<>(relatedTechniqueNames) : new ArrayList<>();
-		t.relatedIngredientNames = relatedIngredientNames != null ? new ArrayList<>(relatedIngredientNames) : new ArrayList<>();
+		t.relatedTechniqueIds = relatedTechniqueIds != null ? new HashSet<>(relatedTechniqueIds) : new HashSet<>();
 		t.status = status != null ? status : PublishStatus.DRAFT;
 		t.createdBy = createdBy;
 		t.updatedAt = updatedAt != null ? updatedAt : createdAt;
 		return t;
+	}
+
+	public void update(String name, String description, String region, DifficultyLevel difficulty,
+	                   List<TechniqueStep> steps, Set<UUID> ingredientIds, String country,
+	                   String culturalNotes, String prerequisites, Set<UUID> relatedTechniqueIds) {
+		this.name = name != null ? name.trim() : this.name;
+		this.description = description != null ? description.trim() : "";
+		this.region = region != null ? region.trim() : "";
+		this.difficulty = difficulty != null ? difficulty : this.difficulty;
+		this.steps.clear();
+		if (steps != null) this.steps.addAll(steps);
+		this.ingredientIds.clear();
+		if (ingredientIds != null) this.ingredientIds.addAll(ingredientIds);
+		this.country = country;
+		this.culturalNotes = culturalNotes;
+		this.prerequisites = prerequisites;
+		this.relatedTechniqueIds = relatedTechniqueIds != null ? new HashSet<>(relatedTechniqueIds) : new HashSet<>();
+		this.updatedAt = Instant.now();
 	}
 
 	public void publish() {
@@ -109,8 +123,7 @@ public class Technique {
 	public String getCountry() { return country; }
 	public String getCulturalNotes() { return culturalNotes; }
 	public String getPrerequisites() { return prerequisites; }
-	public List<String> getRelatedTechniqueNames() { return Collections.unmodifiableList(relatedTechniqueNames); }
-	public List<String> getRelatedIngredientNames() { return Collections.unmodifiableList(relatedIngredientNames); }
+	public Set<UUID> getRelatedTechniqueIds() { return Collections.unmodifiableSet(relatedTechniqueIds); }
 	public PublishStatus getStatus() { return status; }
 	public String getCreatedBy() { return createdBy; }
 	public Instant getCreatedAt() { return createdAt; }

@@ -4,6 +4,7 @@ import com.yaseminyumak.culinarygraphbackend.recipe.domain.DifficultyLevel;
 import com.yaseminyumak.culinarygraphbackend.recipe.domain.PublishStatus;
 import java.time.Instant;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 public record RecipeResponse(
@@ -21,7 +22,7 @@ public record RecipeResponse(
 	String country,
 	List<String> tags,
 	String originStory,
-	List<String> associatedTechniqueNames
+	Set<UUID> associatedTechniqueIds
 ) {
 	public record StepDto(int order, String instruction) {}
 	public record IngredientDto(String name, String quantity, String unit, UUID ingredientId) {}

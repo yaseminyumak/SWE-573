@@ -10,6 +10,7 @@ export interface RecipeIngredientDto {
   name: string
   quantity: string
   unit: string
+  ingredientId?: string | null
   substitution?: string
 }
 
@@ -29,7 +30,7 @@ export interface RecipeResponse {
   ingredients: RecipeIngredientDto[]
   tags: string[]
   originStory: string | null
-  associatedTechniqueNames: string[]
+  associatedTechniqueIds: string[]
 }
 
 export interface CreateRecipeRequest {
@@ -43,7 +44,7 @@ export interface CreateRecipeRequest {
   ingredients: { name: string; quantity?: string; unit?: string; substitution?: string; ingredientId?: string | null }[]
   tags?: string[]
   originStory?: string
-  associatedTechniqueNames?: string[]
+  associatedTechniqueIds?: string[]
 }
 
 import { apiClient } from '../../shared/api/client'
@@ -61,4 +62,15 @@ export async function createRecipe(body: CreateRecipeRequest): Promise<RecipeRes
     method: 'POST',
     body: JSON.stringify(body),
   })
+}
+
+export async function updateRecipe(id: string, body: CreateRecipeRequest): Promise<RecipeResponse> {
+  return apiClient<RecipeResponse>(`/recipes/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(body),
+  })
+}
+
+export async function deleteRecipe(id: string): Promise<void> {
+  return apiClient<void>(`/recipes/${id}`, { method: 'DELETE' })
 }

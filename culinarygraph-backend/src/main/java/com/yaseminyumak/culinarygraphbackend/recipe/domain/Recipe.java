@@ -3,8 +3,10 @@ package com.yaseminyumak.culinarygraphbackend.recipe.domain;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.UUID;
 
 /**
@@ -26,7 +28,7 @@ public class Recipe {
 	private String country;
 	private List<String> tags;
 	private String originStory;
-	private List<String> associatedTechniqueNames;
+	private Set<UUID> associatedTechniqueIds;
 
 	private Recipe(UUID id, Instant createdAt, List<RecipeStep> steps, List<RecipeIngredient> ingredients) {
 		this.id = id;
@@ -34,7 +36,7 @@ public class Recipe {
 		this.steps = new ArrayList<>(steps);
 		this.ingredients = new ArrayList<>(ingredients);
 		this.tags = new ArrayList<>();
-		this.associatedTechniqueNames = new ArrayList<>();
+		this.associatedTechniqueIds = new HashSet<>();
 	}
 
 	/**
@@ -45,7 +47,7 @@ public class Recipe {
 	                                     Instant createdAt, Instant updatedAt,
 	                                     List<RecipeStep> steps, List<RecipeIngredient> ingredients,
 	                                     String country, List<String> tags, String originStory,
-	                                     List<String> associatedTechniqueNames) {
+	                                     Set<UUID> associatedTechniqueIds) {
 		Recipe r = new Recipe(id, createdAt, steps != null ? steps : List.of(), ingredients != null ? ingredients : List.of());
 		r.title = title;
 		r.description = description != null ? description : "";
@@ -57,7 +59,7 @@ public class Recipe {
 		r.country = country;
 		r.tags = tags != null ? new ArrayList<>(tags) : new ArrayList<>();
 		r.originStory = originStory;
-		r.associatedTechniqueNames = associatedTechniqueNames != null ? new ArrayList<>(associatedTechniqueNames) : new ArrayList<>();
+		r.associatedTechniqueIds = associatedTechniqueIds != null ? new HashSet<>(associatedTechniqueIds) : new HashSet<>();
 		return r;
 	}
 
@@ -67,7 +69,7 @@ public class Recipe {
 	public static Recipe create(String title, String description, DifficultyLevel difficulty, Integer durationMinutes,
 	                            String createdBy, List<RecipeStep> steps, List<RecipeIngredient> ingredients,
 	                            String country, List<String> tags, String originStory,
-	                            List<String> associatedTechniqueNames) {
+	                            Set<UUID> associatedTechniqueIds) {
 		Objects.requireNonNull(title, "title cannot be null");
 		Objects.requireNonNull(createdBy, "createdBy cannot be null");
 		Recipe r = new Recipe(UUID.randomUUID(), Instant.now(), steps != null ? steps : List.of(), ingredients != null ? ingredients : List.of());
@@ -81,8 +83,26 @@ public class Recipe {
 		r.country = country;
 		r.tags = tags != null ? new ArrayList<>(tags) : new ArrayList<>();
 		r.originStory = originStory;
-		r.associatedTechniqueNames = associatedTechniqueNames != null ? new ArrayList<>(associatedTechniqueNames) : new ArrayList<>();
+		r.associatedTechniqueIds = associatedTechniqueIds != null ? new HashSet<>(associatedTechniqueIds) : new HashSet<>();
 		return r;
+	}
+
+	public void update(String title, String description, DifficultyLevel difficulty, Integer durationMinutes,
+	                   List<RecipeStep> steps, List<RecipeIngredient> ingredients, String country,
+	                   List<String> tags, String originStory, Set<UUID> associatedTechniqueIds) {
+		this.title = title != null ? title.trim() : this.title;
+		this.description = description != null ? description.trim() : "";
+		this.difficulty = difficulty != null ? difficulty : this.difficulty;
+		this.durationMinutes = durationMinutes;
+		this.steps.clear();
+		if (steps != null) this.steps.addAll(steps);
+		this.ingredients.clear();
+		if (ingredients != null) this.ingredients.addAll(ingredients);
+		this.country = country;
+		this.tags = tags != null ? new ArrayList<>(tags) : new ArrayList<>();
+		this.originStory = originStory;
+		this.associatedTechniqueIds = associatedTechniqueIds != null ? new HashSet<>(associatedTechniqueIds) : new HashSet<>();
+		this.updatedAt = Instant.now();
 	}
 
 	public void publish() {
@@ -161,7 +181,7 @@ public class Recipe {
 		return originStory;
 	}
 
-	public List<String> getAssociatedTechniqueNames() {
-		return Collections.unmodifiableList(associatedTechniqueNames);
+	public Set<UUID> getAssociatedTechniqueIds() {
+		return Collections.unmodifiableSet(associatedTechniqueIds);
 	}
 }

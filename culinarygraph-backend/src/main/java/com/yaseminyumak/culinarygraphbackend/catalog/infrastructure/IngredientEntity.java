@@ -45,10 +45,13 @@ public class IngredientEntity {
 	@Column(name = "country")
 	private String country;
 
-	@ElementCollection(fetch = FetchType.LAZY)
-	@CollectionTable(name = "ingredient_related_techniques", joinColumns = @JoinColumn(name = "ingredient_id"))
-	@Column(name = "technique_name", length = 500)
-	private List<String> relatedTechniqueNames = new ArrayList<>();
+	@ManyToMany(fetch = FetchType.LAZY)
+	@JoinTable(
+		name = "ingredient_related_techniques",
+		joinColumns = @JoinColumn(name = "ingredient_id"),
+		inverseJoinColumns = @JoinColumn(name = "technique_id")
+	)
+	private Set<TechniqueEntity> relatedTechniques = new HashSet<>();
 
 	@Enumerated(EnumType.STRING)
 	@Column(name = "status", nullable = false, length = 20)
@@ -82,8 +85,8 @@ public class IngredientEntity {
 	public void setProvenanceStory(String provenanceStory) { this.provenanceStory = provenanceStory; }
 	public String getCountry() { return country; }
 	public void setCountry(String country) { this.country = country; }
-	public List<String> getRelatedTechniqueNames() { return relatedTechniqueNames; }
-	public void setRelatedTechniqueNames(List<String> relatedTechniqueNames) { this.relatedTechniqueNames = relatedTechniqueNames; }
+	public Set<TechniqueEntity> getRelatedTechniques() { return relatedTechniques; }
+	public void setRelatedTechniques(Set<TechniqueEntity> relatedTechniques) { this.relatedTechniques = relatedTechniques; }
 	public PublishStatus getStatus() { return status; }
 	public void setStatus(PublishStatus status) { this.status = status; }
 	public String getCreatedBy() { return createdBy; }

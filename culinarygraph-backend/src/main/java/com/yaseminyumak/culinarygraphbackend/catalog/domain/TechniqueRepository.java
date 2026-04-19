@@ -8,4 +8,5 @@ public interface TechniqueRepository {
 	Technique save(Technique technique);
 	Optional<Technique> findById(UUID id);
 	List<Technique> findAll();
+	void delete(Technique technique);
 }

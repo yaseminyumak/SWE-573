@@ -4,6 +4,8 @@ import com.yaseminyumak.culinarygraphbackend.catalog.domain.Season;
 import jakarta.validation.constraints.NotBlank;
 
 import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 
 public record CreateIngredientRequest(
 	@NotBlank String name,
@@ -13,5 +15,5 @@ public record CreateIngredientRequest(
 	List<String> substitutes,
 	String provenanceStory,
 	String country,
-	List<String> relatedTechniqueNames
+	Set<UUID> relatedTechniqueIds
 ) {}
