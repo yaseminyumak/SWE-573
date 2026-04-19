@@ -39,6 +39,36 @@ Backend **`docker`** Spring profili ile çalışır: veritabanı `postgres` serv
 
 Tarayıcıda yalnızca **HTTPS** veya **`http://localhost` / `127.0.0.1`** “secure context” sayılır; `http://DROPLET_IP:5173` değil. **keycloak-js** hem PKCE (`crypto.subtle`) hem OAuth **state** için **`crypto.randomUUID`** kullanır; ikisi de güvensiz bağlamda eksik olabilir. Uygulama: güvenli bağlam değilse **PKCE kapatılır** (`pkceMethod: false`) ve **`randomUUID` için `getRandomValues` tabanlı polyfill** yüklenir (yalnızca geliştirme/Droplet kolaylığı; üretimde **HTTPS** hedefleyin). Keycloak token adımında PKCE hatası alırsanız: **Clients → `culinarygraph-app` → Advanced** içinde PKCE’yi isteğe bağlı yapın.
 
+### Keycloak login/register: CulinaryGraph custom theme
+
+Login, register, forgot-password ve info/error sayfaları **özel `culinarygraph` temasıyla** gelir (parent: Keycloak'un kendi `keycloak` teması; sadece CSS + logo + arka plan görseli override edilir). Sayfa düzeni: tüm sayfa **mezze sofrası fotoğrafıyla** kaplı (`fixed`, `cover`); üstüne yumuşak navy/mor overlay, ortada **logo + beyaz form kartı** (pill inputlar + mor-pembe gradient pill CTA). Tema dosyaları:
+
+```
+docker/keycloak/themes/culinarygraph/login/
+├── theme.properties
+└── resources/
+    ├── css/styles.css
+    └── img/
+        ├── logo.svg                 # form üstündeki yatay wordmark
+        └── mezze-table.jpg          # tüm sayfayı kaplayan arka plan görseli
+```
+
+`docker-compose.yml` bu klasörü konteynere `/opt/keycloak/themes/culinarygraph` olarak read-only mount eder. Realm `loginTheme: "culinarygraph"` değerini hem `culinarygraph-realm.json`'dan **ilk import'ta** hem de `keycloak-http-bootstrap.sh` içinden **her açılışta** alır (yani mevcut bir DB'de bile uygulanır).
+
+**Tema değişikliklerini uygula (canlı stack):**
+
+```bash
+cd docker
+podman compose restart keycloak       # tema dosyaları read-only mount, restart yeter
+```
+
+Tarayıcıda CSS hâlâ eski görünüyorsa Keycloak'un teması sıkça cache'ler:
+
+- Admin → realm **culinarygraph** → **Realm settings** → **Themes** → **Save** (tema değerini değiştirmeden kaydetmek cache'i temizler), veya
+- Hard refresh (Cmd/Ctrl+Shift+R).
+
+**Tasarımı değiştir:** Renkleri değiştirmek için `resources/css/styles.css` üst kısmındaki `:root { --cg-* }` değişkenlerini güncelle. Logo: `resources/img/logo.svg`. Arka plan fotoğrafı: `resources/img/mezze-table.jpg` (overlay yoğunluğu CSS'te `body.login-pf` içindeki `linear-gradient(... rgba(23,20,51,0.72) ...)` değerleriyle ayarlanır). Başlık altındaki slogan `#kc-page-title::after` ile CSS üzerinden enjekte edilir.
+
 ### Keycloak: `Invalid parameter: redirect_uri` (400)
 
 Tarayıcıdaki uygulama adresi (ör. `http://DROPLET_IP:5173/`) **client’ın “Valid redirect URIs”** listesinde yoksa Keycloak isteği reddeder. `culinarygraph-realm.json` içinde örnek Droplet satırları vardır; **yalnızca ilk import’ta** (boş Keycloak DB) uygulanır.

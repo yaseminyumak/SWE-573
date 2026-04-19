@@ -2,6 +2,7 @@
 # Keycloak marks non–RFC1918 / public client addresses as "external" for sslRequired=EXTERNAL
 # (master realm default), which blocks the admin UI over http://PUBLIC_IP:8180.
 # Localhost kcadm calls are loopback → allowed; we set sslRequired=NONE on master + culinarygraph.
+# Also re-applies loginTheme=culinarygraph so existing realms (skipped on import) pick up the theme.
 set -eu
 
 /opt/keycloak/bin/kc.sh start-dev --import-realm &
@@ -20,7 +21,10 @@ while [ "$i" -lt 90 ]; do
 		j=0
 		while [ "$j" -lt 24 ]; do
 			if /opt/keycloak/bin/kcadm.sh get realms/culinarygraph >/dev/null 2>&1; then
-				/opt/keycloak/bin/kcadm.sh update realms/culinarygraph -s sslRequired=NONE
+				/opt/keycloak/bin/kcadm.sh update realms/culinarygraph \
+					-s sslRequired=NONE \
+					-s loginTheme=culinarygraph
+				echo "keycloak-http-bootstrap: applied loginTheme=culinarygraph on culinarygraph realm"
 				break
 			fi
 			j=$((j + 1))

@@ -48,6 +48,8 @@ services:
     volumes:
       - ./keycloak/culinarygraph-realm.json:/opt/keycloak/data/import/culinarygraph-realm.json
       - ./keycloak/keycloak-http-bootstrap.sh:/opt/keycloak/keycloak-http-bootstrap.sh:ro
+      # Custom CulinaryGraph login theme (parent: keycloak); applied via realm "loginTheme".
+      - ./keycloak/themes/culinarygraph:/opt/keycloak/themes/culinarygraph:ro
     ports:
       - "8180:8080"
     depends_on:
