@@ -154,7 +154,7 @@ export default function TechniqueListPage() {
                       <p className="text-xs text-[#8c2d9c] mt-1 font-medium">{[t.country, t.region].filter(Boolean).join(', ')}</p>
                     )}
                     {t.createdBy && (
-                      <p className="text-xs text-gray-400 mt-2">By {t.createdBy}</p>
+                      <p className="text-xs text-gray-400 mt-2">By <Link to={`/profile/${t.createdBy}`} onClick={(e) => e.stopPropagation()} className="hover:text-[#8c2d9c] hover:underline">{t.createdBy}</Link></p>
                     )}
                   </div>
                 </Link>

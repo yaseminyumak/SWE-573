@@ -155,7 +155,7 @@ export default function IngredientListPage() {
                       {[ing.country, ing.region].filter(Boolean).join(', ') || 'No region'}
                     </p>
                     {ing.createdBy && (
-                      <p className="text-xs text-gray-400 mt-2">By {ing.createdBy}</p>
+                      <p className="text-xs text-gray-400 mt-2">By <Link to={`/profile/${ing.createdBy}`} onClick={(e) => e.stopPropagation()} className="hover:text-[#8c2d9c] hover:underline">{ing.createdBy}</Link></p>
                     )}
                   </div>
                 </Link>
