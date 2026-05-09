@@ -156,7 +156,7 @@ export default function TechniqueDetailPage() {
         {technique.createdBy && (
           <div className="pt-4 border-t border-gray-100">
             <p className="text-xs text-gray-400">
-              Created by <span className="font-medium text-[#8c2d9c]">{technique.createdBy}</span>
+              Created by <Link to={`/profile/${technique.createdBy}`} className="font-medium text-[#8c2d9c] hover:underline">{technique.createdBy}</Link>
             </p>
           </div>
         )}

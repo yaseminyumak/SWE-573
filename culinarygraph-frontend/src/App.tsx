@@ -15,6 +15,7 @@ import RecipeFormPage from './features/recipe/RecipeFormPage'
 import RecipeDetailPage from './features/recipe/RecipeDetailPage'
 import SearchPage from './features/search/SearchPage'
 import ProfilePage from './features/profile/ProfilePage'
+import PublicProfilePage from './features/profile/PublicProfilePage'
 
 const queryClient = new QueryClient()
 
@@ -41,6 +42,7 @@ function App() {
               <Route path="/recipes/:id" element={<RecipeDetailPage />} />
               <Route path="/search" element={<SearchPage />} />
               <Route path="/profile" element={<ProfilePage />} />
+              <Route path="/profile/:username" element={<PublicProfilePage />} />
             </Routes>
           </Layout>
         </BrowserRouter>
