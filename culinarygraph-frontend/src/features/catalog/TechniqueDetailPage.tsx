@@ -142,6 +142,14 @@ export default function TechniqueDetailPage() {
             </ul>
           </div>
         )}
+
+        {technique.createdBy && (
+          <div className="pt-4 border-t border-gray-100">
+            <p className="text-xs text-gray-400">
+              Created by <span className="font-medium text-[#8c2d9c]">{technique.createdBy}</span>
+            </p>
+          </div>
+        )}
       </div>
     </div>
     </>

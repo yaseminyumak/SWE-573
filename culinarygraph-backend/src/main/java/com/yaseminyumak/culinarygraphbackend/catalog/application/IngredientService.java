@@ -5,6 +5,7 @@ import com.yaseminyumak.culinarygraphbackend.catalog.domain.Ingredient;
 import com.yaseminyumak.culinarygraphbackend.catalog.domain.IngredientRepository;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -84,9 +85,9 @@ public class IngredientService {
 
 	private static String getCurrentUserId() {
 		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-		if (auth != null && auth.isAuthenticated() && auth.getPrincipal() != null
-			&& !"anonymousUser".equals(auth.getPrincipal().toString())) {
-			return auth.getName();
+		if (auth instanceof JwtAuthenticationToken jwtAuth) {
+			String username = jwtAuth.getToken().getClaimAsString("preferred_username");
+			if (username != null && !username.isBlank()) return username;
 		}
 		return "local-dev-user";
 	}
