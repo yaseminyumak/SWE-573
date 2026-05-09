@@ -6,12 +6,15 @@ import { fetchIngredients, fetchTechniques, deleteIngredient, deleteTechnique } 
 import { fetchRecipes, deleteRecipe } from '../recipe/recipeApi'
 import ConfirmModal from '../../shared/components/ConfirmModal'
 import { fetchMyLikes, fetchMyComments } from '../social/socialApi'
+import { fetchProfile, updateBio } from './profileApi'
 
 export default function ProfilePage() {
   const { keycloak, isAuthenticated } = useAuth()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const [confirmState, setConfirmState] = useState<{ label: string; onConfirm: () => void } | null>(null)
+  const [bioEditing, setBioEditing] = useState(false)
+  const [bioDraft, setBioDraft] = useState('')
 
   const username = keycloak.tokenParsed?.preferred_username ?? keycloak.tokenParsed?.sub ?? 'User'
   const email = keycloak.tokenParsed?.email ?? ''
@@ -21,6 +24,19 @@ export default function ProfilePage() {
   const { data: recipes } = useQuery({ queryKey: ['recipes'], queryFn: fetchRecipes })
   const { data: myLikes = [] } = useQuery({ queryKey: ['likes', 'mine'], queryFn: fetchMyLikes })
   const { data: myComments = [] } = useQuery({ queryKey: ['comments', 'mine'], queryFn: fetchMyComments })
+  const { data: profileData } = useQuery({
+    queryKey: ['profile', username],
+    queryFn: () => fetchProfile(username),
+    enabled: !!username,
+  })
+
+  const saveBioMutation = useMutation({
+    mutationFn: (bio: string) => updateBio(bio),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['profile', username] })
+      setBioEditing(false)
+    },
+  })
 
   const delIngredient = useMutation({
     mutationFn: (id: string) => deleteIngredient(id),
@@ -85,6 +101,56 @@ export default function ProfilePage() {
           {email && <p className="text-sm text-gray-700"><span className="font-semibold text-[#171433]">Email:</span> {email}</p>}
           <p className="text-sm text-gray-700"><span className="font-semibold text-[#171433]">Role:</span> Contributor</p>
         </div>
+      </div>
+
+      {/* Bio */}
+      <div className="border border-[#d67ec9] rounded-lg p-5 mb-8 bg-white shadow-sm">
+        <div className="flex items-center justify-between mb-3">
+          <p className="font-bold text-sm text-[#171433]">Bio</p>
+          {!bioEditing && (
+            <button
+              onClick={() => { setBioDraft(profileData?.bio ?? ''); setBioEditing(true) }}
+              className="text-xs font-medium text-[#8c2d9c] hover:text-[#7a2589] border border-[#d67ec9] rounded px-3 py-1 hover:border-[#8c2d9c] transition-colors"
+            >
+              Edit Bio
+            </button>
+          )}
+        </div>
+
+        {bioEditing ? (
+          <div className="space-y-3">
+            <textarea
+              value={bioDraft}
+              onChange={(e) => setBioDraft(e.target.value)}
+              rows={4}
+              maxLength={500}
+              placeholder="Tell others about your culinary background, interests, or what you contribute to CulinaryGraph…"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#8c2d9c] focus:ring-1 focus:ring-[#8c2d9c] resize-none"
+            />
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-gray-400">{bioDraft.length}/500</span>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setBioEditing(false)}
+                  className="text-xs font-medium text-gray-500 border border-gray-300 rounded px-3 py-1.5 hover:border-gray-400 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => saveBioMutation.mutate(bioDraft)}
+                  disabled={saveBioMutation.isPending}
+                  className="text-xs font-medium text-white bg-[#8c2d9c] rounded px-4 py-1.5 hover:bg-[#7a2589] transition-colors disabled:opacity-50"
+                >
+                  {saveBioMutation.isPending ? 'Saving…' : 'Save'}
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <p className="text-sm text-gray-700 whitespace-pre-wrap">
+            {profileData?.bio || <span className="text-gray-400 italic">No bio added yet.</span>}
+          </p>
+        )}
       </div>
 
       {/* My Techniques */}
