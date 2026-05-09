@@ -5,6 +5,8 @@ import { createRecipe, updateRecipe, fetchRecipe } from './recipeApi'
 import type { CreateRecipeRequest, DifficultyLevel } from './recipeApi'
 import { fetchIngredients, fetchTechniques } from '../catalog/catalogApi'
 import RelationPicker from '../../shared/components/RelationPicker'
+import ImageManager from '../../shared/components/ImageManager'
+import { useAuth } from '../../auth/AuthProvider'
 import { COUNTRIES } from '../../shared/constants/countries'
 
 const DIFFICULTIES: DifficultyLevel[] = ['EASY', 'MEDIUM', 'HARD']
@@ -14,6 +16,7 @@ export default function RecipeFormPage() {
   const isEdit = !!id
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const { keycloak } = useAuth()
 
   const [title, setTitle] = useState('')
   const [difficulty, setDifficulty] = useState<DifficultyLevel>('MEDIUM')
@@ -104,6 +107,13 @@ export default function RecipeFormPage() {
     <div className="max-w-3xl mx-auto px-6 py-6">
       <h1 className="text-xl font-bold text-[#171433]">{isEdit ? 'Edit Recipe' : 'New Recipe'}</h1>
       <hr className="my-3 border-[#d67ec9]" />
+
+      {isEdit && existing?.createdBy === keycloak?.subject && (
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-700 mb-2">Photos</label>
+          <ImageManager entityType="RECIPE" entityId={id!} canEdit={true} />
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>

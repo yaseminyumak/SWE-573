@@ -4,6 +4,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createTechnique, updateTechnique, fetchTechnique, fetchIngredients } from './catalogApi'
 import type { CreateTechniqueRequest, DifficultyLevel } from './catalogApi'
 import RelationPicker from '../../shared/components/RelationPicker'
+import ImageManager from '../../shared/components/ImageManager'
+import { useAuth } from '../../auth/AuthProvider'
 import { COUNTRIES } from '../../shared/constants/countries'
 
 const DIFFICULTIES: DifficultyLevel[] = ['EASY', 'MEDIUM', 'HARD']
@@ -13,6 +15,7 @@ export default function TechniqueFormPage() {
   const isEdit = !!id
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const { keycloak } = useAuth()
 
   const [name, setName] = useState('')
   const [difficulty, setDifficulty] = useState<DifficultyLevel>('MEDIUM')
@@ -83,6 +86,13 @@ export default function TechniqueFormPage() {
     <div className="max-w-3xl mx-auto px-6 py-6">
       <h1 className="text-xl font-bold text-[#171433]">{isEdit ? 'Edit Technique' : 'New Technique'}</h1>
       <hr className="my-3 border-[#d67ec9]" />
+
+      {isEdit && existing?.createdBy === keycloak?.subject && (
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-700 mb-2">Photos</label>
+          <ImageManager entityType="TECHNIQUE" entityId={id!} canEdit={true} />
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
