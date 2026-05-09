@@ -2,11 +2,13 @@ package com.yaseminyumak.culinarygraphbackend.recipe.application;
 
 import com.yaseminyumak.culinarygraphbackend.recipe.api.dto.CreateRecipeRequest;
 import com.yaseminyumak.culinarygraphbackend.recipe.domain.*;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -61,6 +63,7 @@ public class RecipeService {
 	@Transactional
 	public Recipe update(UUID id, CreateRecipeRequest request) {
 		Recipe recipe = getById(id);
+		requireOwner(recipe.getCreatedBy());
 		List<RecipeStep> steps = request.steps().stream()
 			.map(s -> new RecipeStep(s.order(), s.instruction()))
 			.collect(Collectors.toList());
@@ -78,6 +81,7 @@ public class RecipeService {
 	@Transactional
 	public void delete(UUID id) {
 		Recipe recipe = getById(id);
+		requireOwner(recipe.getCreatedBy());
 		recipeRepository.delete(recipe);
 	}
 
@@ -93,6 +97,12 @@ public class RecipeService {
 		Recipe recipe = getById(id);
 		recipe.archive();
 		return recipeRepository.save(recipe);
+	}
+
+	private static void requireOwner(String createdBy) {
+		if (!createdBy.equals(getCurrentUserId())) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only the creator can modify this content");
+		}
 	}
 
 	private static String getCurrentUserId() {

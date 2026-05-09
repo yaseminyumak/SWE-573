@@ -10,7 +10,7 @@ import { useAuth } from '../../auth/AuthProvider'
 export default function TechniqueDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, keycloak } = useAuth()
   const queryClient = useQueryClient()
   const [showConfirm, setShowConfirm] = useState(false)
   const { ingredientById, techniqueById } = useCatalogIndex()
@@ -30,6 +30,7 @@ export default function TechniqueDetailPage() {
   if (error || !technique) return <p className="text-center py-16 text-sm text-red-500">Technique not found.</p>
 
   const location = [technique.country, technique.region].filter(Boolean).join(', ')
+  const canEdit = isAuthenticated && technique.createdBy === keycloak.tokenParsed?.preferred_username
 
   return (
     <>
@@ -43,13 +44,13 @@ export default function TechniqueDetailPage() {
     <div className="max-w-3xl mx-auto px-6 py-8">
 
       {/* Image gallery */}
-      <ImageManager entityType="TECHNIQUE" entityId={technique.id} />
+      <ImageManager entityType="TECHNIQUE" entityId={technique.id} canEdit={canEdit} />
 
       {/* Title + meta */}
       <div className="mt-6 mb-2">
         <div className="flex items-start justify-between gap-4">
           <h1 className="text-2xl font-bold text-[#171433]">{technique.name}</h1>
-          {isAuthenticated && (
+          {canEdit && (
             <div className="flex gap-2 flex-shrink-0">
               <button onClick={() => navigate(`/catalog/techniques/${id}/edit`)}
                 className="px-3 py-1.5 text-sm font-medium border border-[#8c2d9c] text-[#8c2d9c] rounded hover:bg-[#ede8ee] transition-colors">

@@ -88,7 +88,7 @@ export default function IngredientFormPage() {
       <h1 className="text-xl font-bold text-[#171433]">{isEdit ? 'Edit Ingredient' : 'New Ingredient'}</h1>
       <hr className="my-3 border-[#d67ec9]" />
 
-      {isEdit && existing?.createdBy === keycloak?.subject && (
+      {isEdit && existing?.createdBy === keycloak?.tokenParsed?.preferred_username && (
         <div className="mb-6">
           <label className="block text-sm font-medium text-gray-700 mb-2">Photos</label>
           <ImageManager entityType="INGREDIENT" entityId={id!} canEdit={true} />

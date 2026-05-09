@@ -4,11 +4,13 @@ import com.yaseminyumak.culinarygraphbackend.catalog.api.dto.CreateTechniqueRequ
 import com.yaseminyumak.culinarygraphbackend.catalog.domain.Technique;
 import com.yaseminyumak.culinarygraphbackend.catalog.domain.TechniqueRepository;
 import com.yaseminyumak.culinarygraphbackend.catalog.domain.TechniqueStep;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.HashSet;
 import java.util.List;
@@ -63,6 +65,7 @@ public class TechniqueService {
 	@Transactional
 	public Technique update(UUID id, CreateTechniqueRequest request) {
 		Technique technique = getById(id);
+		requireOwner(technique.getCreatedBy());
 		List<TechniqueStep> steps = request.steps() != null
 			? request.steps().stream()
 				.map(s -> new TechniqueStep(s.order(), s.instruction()))
@@ -81,6 +84,7 @@ public class TechniqueService {
 	@Transactional
 	public void delete(UUID id) {
 		Technique technique = getById(id);
+		requireOwner(technique.getCreatedBy());
 		techniqueRepository.delete(technique);
 	}
 
@@ -96,6 +100,12 @@ public class TechniqueService {
 		Technique technique = getById(id);
 		technique.archive();
 		return techniqueRepository.save(technique);
+	}
+
+	private static void requireOwner(String createdBy) {
+		if (!createdBy.equals(getCurrentUserId())) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only the creator can modify this content");
+		}
 	}
 
 	private static String getCurrentUserId() {

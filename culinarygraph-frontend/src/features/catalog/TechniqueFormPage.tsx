@@ -87,7 +87,7 @@ export default function TechniqueFormPage() {
       <h1 className="text-xl font-bold text-[#171433]">{isEdit ? 'Edit Technique' : 'New Technique'}</h1>
       <hr className="my-3 border-[#d67ec9]" />
 
-      {isEdit && existing?.createdBy === keycloak?.subject && (
+      {isEdit && existing?.createdBy === keycloak?.tokenParsed?.preferred_username && (
         <div className="mb-6">
           <label className="block text-sm font-medium text-gray-700 mb-2">Photos</label>
           <ImageManager entityType="TECHNIQUE" entityId={id!} canEdit={true} />
