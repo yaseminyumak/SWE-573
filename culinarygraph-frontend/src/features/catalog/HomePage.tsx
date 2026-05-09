@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react'
 import { fetchIngredients, fetchTechniques } from './catalogApi'
 import { fetchRecipes } from '../recipe/recipeApi'
 import EntityCardImage from '../../shared/components/EntityCardImage'
+import SocialCounts from '../social/SocialCounts'
 
 type ItemType = 'recipe' | 'ingredient' | 'technique'
 interface CardItem { type: ItemType; id: string; name: string; desc: string; location: string }
@@ -83,6 +84,7 @@ export default function HomePage() {
                 <div className="p-3">
                   <p className="font-bold text-sm text-[#171433] group-hover:text-[#8c2d9c] truncate leading-snug">{item.name}</p>
                   {item.location && <p className="text-xs text-[#8c2d9c] mt-1 font-medium truncate">{item.location}</p>}
+                  <SocialCounts entityType={entityType(item.type)} entityId={item.id} />
                 </div>
               </Link>
             ))}
@@ -104,6 +106,7 @@ export default function HomePage() {
                 <div className="p-3">
                   <p className="font-bold text-sm text-[#171433] group-hover:text-[#8c2d9c] truncate leading-snug">{item.name}</p>
                   {item.location && <p className="text-xs text-[#8c2d9c] mt-1 truncate font-medium">{item.location}</p>}
+                  <SocialCounts entityType={entityType(item.type)} entityId={item.id} />
                 </div>
               </Link>
             ))}

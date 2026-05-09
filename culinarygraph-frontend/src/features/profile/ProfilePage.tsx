@@ -1,10 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { useAuth } from '../../auth/AuthProvider'
 import { fetchIngredients, fetchTechniques, deleteIngredient, deleteTechnique } from '../catalog/catalogApi'
 import { fetchRecipes, deleteRecipe } from '../recipe/recipeApi'
 import ConfirmModal from '../../shared/components/ConfirmModal'
+import { fetchMyLikes, fetchMyComments } from '../social/socialApi'
 
 export default function ProfilePage() {
   const { keycloak, isAuthenticated } = useAuth()
@@ -12,13 +13,14 @@ export default function ProfilePage() {
   const queryClient = useQueryClient()
   const [confirmState, setConfirmState] = useState<{ label: string; onConfirm: () => void } | null>(null)
 
-  const userId = keycloak.subject
   const username = keycloak.tokenParsed?.preferred_username ?? keycloak.tokenParsed?.sub ?? 'User'
   const email = keycloak.tokenParsed?.email ?? ''
 
   const { data: ingredients } = useQuery({ queryKey: ['catalog', 'ingredients'], queryFn: fetchIngredients })
   const { data: techniques } = useQuery({ queryKey: ['catalog', 'techniques'], queryFn: fetchTechniques })
   const { data: recipes } = useQuery({ queryKey: ['recipes'], queryFn: fetchRecipes })
+  const { data: myLikes = [] } = useQuery({ queryKey: ['likes', 'mine'], queryFn: fetchMyLikes })
+  const { data: myComments = [] } = useQuery({ queryKey: ['comments', 'mine'], queryFn: fetchMyComments })
 
   const delIngredient = useMutation({
     mutationFn: (id: string) => deleteIngredient(id),
@@ -45,9 +47,22 @@ export default function ProfilePage() {
     )
   }
 
-  const myTechniques = techniques?.filter((t) => t.createdBy === userId) ?? []
-  const myIngredients = ingredients?.filter((i) => i.createdBy === userId) ?? []
-  const myRecipes = recipes?.filter((r) => r.createdBy === userId) ?? []
+  const myTechniques = techniques?.filter((t) => t.createdBy === username) ?? []
+  const myIngredients = ingredients?.filter((i) => i.createdBy === username) ?? []
+  const myRecipes = recipes?.filter((r) => r.createdBy === username) ?? []
+
+  const likedRecipes = myLikes
+    .filter((l) => l.entityType === 'RECIPE')
+    .map((l) => recipes?.find((r) => r.id === l.entityId))
+    .filter(Boolean)
+  const likedIngredients = myLikes
+    .filter((l) => l.entityType === 'INGREDIENT')
+    .map((l) => ingredients?.find((i) => i.id === l.entityId))
+    .filter(Boolean)
+  const likedTechniques = myLikes
+    .filter((l) => l.entityType === 'TECHNIQUE')
+    .map((l) => techniques?.find((t) => t.id === l.entityId))
+    .filter(Boolean)
 
   return (
     <>
@@ -123,6 +138,61 @@ export default function ProfilePage() {
               </div>
             ))}
           </div>
+        )}
+      </section>
+
+      {/* My Activity */}
+      <section className="mb-8">
+        <h2 className="font-bold text-base text-[#171433] mb-3">My Activity</h2>
+
+        {(likedRecipes.length > 0 || likedIngredients.length > 0 || likedTechniques.length > 0) && (
+          <div className="mb-4">
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Liked Content</p>
+            <div className="border border-gray-200 rounded-lg divide-y divide-gray-100 bg-white shadow-sm overflow-hidden">
+              {likedRecipes.map((r) => r && (
+                <Link key={r.id} to={`/recipes/${r.id}`}
+                  className="flex items-center gap-2 px-4 py-2.5 hover:bg-[#ede8ee] transition-colors">
+                  <span className="text-xs bg-[#ede8ee] text-[#8c2d9c] px-2 py-0.5 rounded font-medium flex-shrink-0">Recipe</span>
+                  <span className="text-sm text-gray-700 truncate">{r.title}</span>
+                </Link>
+              ))}
+              {likedIngredients.map((i) => i && (
+                <Link key={i.id} to={`/catalog/ingredients/${i.id}`}
+                  className="flex items-center gap-2 px-4 py-2.5 hover:bg-[#ede8ee] transition-colors">
+                  <span className="text-xs bg-[#ede8ee] text-[#8c2d9c] px-2 py-0.5 rounded font-medium flex-shrink-0">Ingredient</span>
+                  <span className="text-sm text-gray-700 truncate">{i.name}</span>
+                </Link>
+              ))}
+              {likedTechniques.map((t) => t && (
+                <Link key={t.id} to={`/catalog/techniques/${t.id}`}
+                  className="flex items-center gap-2 px-4 py-2.5 hover:bg-[#ede8ee] transition-colors">
+                  <span className="text-xs bg-[#ede8ee] text-[#8c2d9c] px-2 py-0.5 rounded font-medium flex-shrink-0">Technique</span>
+                  <span className="text-sm text-gray-700 truncate">{t.name}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {myComments.length > 0 && (
+          <div>
+            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Recent Comments</p>
+            <div className="border border-gray-200 rounded-lg divide-y divide-gray-100 bg-white shadow-sm overflow-hidden">
+              {myComments.slice(0, 5).map((c) => (
+                <div key={c.id} className="px-4 py-2.5">
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <span className="text-xs bg-[#ede8ee] text-[#8c2d9c] px-2 py-0.5 rounded font-medium">{c.username}</span>
+                    <span className="text-xs text-gray-400">{new Date(c.createdAt).toLocaleDateString()}</span>
+                  </div>
+                  <p className="text-sm text-gray-700 line-clamp-1">{c.body}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {likedRecipes.length === 0 && likedIngredients.length === 0 && likedTechniques.length === 0 && myComments.length === 0 && (
+          <p className="text-sm text-gray-400">No activity yet.</p>
         )}
       </section>
 
