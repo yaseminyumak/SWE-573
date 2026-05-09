@@ -4,6 +4,7 @@ import com.yaseminyumak.culinarygraphbackend.recipe.api.dto.CreateRecipeRequest;
 import com.yaseminyumak.culinarygraphbackend.recipe.domain.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.util.HashSet;
@@ -96,11 +97,10 @@ public class RecipeService {
 
 	private static String getCurrentUserId() {
 		Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-		if (auth != null && auth.isAuthenticated() && auth.getPrincipal() != null
-			&& !"anonymousUser".equals(auth.getPrincipal().toString())) {
-			return auth.getName();
+		if (auth instanceof JwtAuthenticationToken jwtAuth) {
+			String username = jwtAuth.getToken().getClaimAsString("preferred_username");
+			if (username != null && !username.isBlank()) return username;
 		}
-		// Local / dev: no JWT or anonymous -> use fallback so POST /api/recipes works
 		return "local-dev-user";
 	}
 }

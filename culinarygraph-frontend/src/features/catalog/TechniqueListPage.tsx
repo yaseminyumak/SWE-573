@@ -153,6 +153,9 @@ export default function TechniqueListPage() {
                     {(t.country || t.region) && (
                       <p className="text-xs text-[#8c2d9c] mt-1 font-medium">{[t.country, t.region].filter(Boolean).join(', ')}</p>
                     )}
+                    {t.createdBy && (
+                      <p className="text-xs text-gray-400 mt-2">By {t.createdBy}</p>
+                    )}
                   </div>
                 </Link>
               ))}

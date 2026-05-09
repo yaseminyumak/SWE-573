@@ -154,6 +154,9 @@ export default function IngredientListPage() {
                     <p className="text-xs text-gray-400 mt-1">
                       {[ing.country, ing.region].filter(Boolean).join(', ') || 'No region'}
                     </p>
+                    {ing.createdBy && (
+                      <p className="text-xs text-gray-400 mt-2">By {ing.createdBy}</p>
+                    )}
                   </div>
                 </Link>
               ))}
