@@ -6,6 +6,8 @@ import { useCatalogIndex } from '../../shared/hooks/useCatalogIndex'
 import ImageManager from '../../shared/components/ImageManager'
 import ConfirmModal from '../../shared/components/ConfirmModal'
 import { useAuth } from '../../auth/AuthProvider'
+import LikeButton from '../social/LikeButton'
+import CommentSection from '../social/CommentSection'
 
 export default function RecipeDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -13,6 +15,7 @@ export default function RecipeDetailPage() {
   const { isAuthenticated, keycloak } = useAuth()
   const queryClient = useQueryClient()
   const [showConfirm, setShowConfirm] = useState(false)
+  const [commentCount, setCommentCount] = useState(0)
   const { data: recipe, isLoading, error } = useQuery({
     queryKey: ['recipes', id],
     queryFn: () => fetchRecipe(id!),
@@ -147,6 +150,12 @@ export default function RecipeDetailPage() {
             </p>
           </div>
         )}
+
+        <div className="pt-4 border-t border-gray-100">
+          <LikeButton entityType="RECIPE" entityId={recipe.id} commentCount={commentCount} />
+        </div>
+
+        <CommentSection entityType="RECIPE" entityId={recipe.id} onCommentCountChange={setCommentCount} />
 
         {recipe.createdBy && (
           <div className="pt-4 border-t border-gray-100">

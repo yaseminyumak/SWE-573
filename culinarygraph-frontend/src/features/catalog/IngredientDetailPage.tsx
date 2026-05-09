@@ -6,6 +6,8 @@ import ImageManager from '../../shared/components/ImageManager'
 import ConfirmModal from '../../shared/components/ConfirmModal'
 import { useCatalogIndex } from '../../shared/hooks/useCatalogIndex'
 import { useAuth } from '../../auth/AuthProvider'
+import LikeButton from '../social/LikeButton'
+import CommentSection from '../social/CommentSection'
 
 export default function IngredientDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -13,6 +15,7 @@ export default function IngredientDetailPage() {
   const { isAuthenticated, keycloak } = useAuth()
   const queryClient = useQueryClient()
   const [showConfirm, setShowConfirm] = useState(false)
+  const [commentCount, setCommentCount] = useState(0)
   const { techniqueById } = useCatalogIndex()
 
   const { data: ingredient, isLoading, error } = useQuery({
@@ -125,6 +128,12 @@ export default function IngredientDetailPage() {
             </ul>
           </div>
         )}
+
+        <div className="pt-4 border-t border-gray-100">
+          <LikeButton entityType="INGREDIENT" entityId={ingredient.id} commentCount={commentCount} />
+        </div>
+
+        <CommentSection entityType="INGREDIENT" entityId={ingredient.id} onCommentCountChange={setCommentCount} />
 
         {ingredient.createdBy && (
           <div className="pt-4 border-t border-gray-100">
