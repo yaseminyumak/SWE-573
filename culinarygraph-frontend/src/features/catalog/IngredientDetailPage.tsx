@@ -10,7 +10,7 @@ import { useAuth } from '../../auth/AuthProvider'
 export default function IngredientDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, keycloak } = useAuth()
   const queryClient = useQueryClient()
   const [showConfirm, setShowConfirm] = useState(false)
   const { techniqueById } = useCatalogIndex()
@@ -41,6 +41,7 @@ export default function IngredientDetailPage() {
     ...linkedTechniqueIds,
   ])]
   const location = [ingredient.country, ingredient.region].filter(Boolean).join(', ')
+  const canEdit = isAuthenticated && ingredient.createdBy === keycloak.tokenParsed?.preferred_username
 
   return (
     <>
@@ -54,13 +55,13 @@ export default function IngredientDetailPage() {
     <div className="max-w-3xl mx-auto px-6 py-8">
 
       {/* Image gallery */}
-      <ImageManager entityType="INGREDIENT" entityId={ingredient.id} />
+      <ImageManager entityType="INGREDIENT" entityId={ingredient.id} canEdit={canEdit} />
 
       {/* Title + meta */}
       <div className="mt-6 mb-6">
         <div className="flex items-start justify-between gap-4">
           <h1 className="text-2xl font-bold text-[#171433]">{ingredient.name}</h1>
-          {isAuthenticated && (
+          {canEdit && (
             <div className="flex gap-2 flex-shrink-0">
               <button onClick={() => navigate(`/catalog/ingredients/${id}/edit`)}
                 className="px-3 py-1.5 text-sm font-medium border border-[#8c2d9c] text-[#8c2d9c] rounded hover:bg-[#ede8ee] transition-colors">

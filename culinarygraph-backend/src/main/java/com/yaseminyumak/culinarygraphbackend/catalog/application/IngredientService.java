@@ -3,11 +3,13 @@ package com.yaseminyumak.culinarygraphbackend.catalog.application;
 import com.yaseminyumak.culinarygraphbackend.catalog.api.dto.CreateIngredientRequest;
 import com.yaseminyumak.culinarygraphbackend.catalog.domain.Ingredient;
 import com.yaseminyumak.culinarygraphbackend.catalog.domain.IngredientRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.HashSet;
 import java.util.List;
@@ -54,6 +56,7 @@ public class IngredientService {
 	@Transactional
 	public Ingredient update(UUID id, CreateIngredientRequest request) {
 		Ingredient ingredient = getById(id);
+		requireOwner(ingredient.getCreatedBy());
 		ingredient.update(
 			request.name(), request.description(), request.region(),
 			request.seasons() != null ? new HashSet<>(request.seasons()) : new HashSet<>(),
@@ -66,6 +69,7 @@ public class IngredientService {
 	@Transactional
 	public void delete(UUID id) {
 		Ingredient ingredient = getById(id);
+		requireOwner(ingredient.getCreatedBy());
 		ingredientRepository.delete(ingredient);
 	}
 
@@ -81,6 +85,12 @@ public class IngredientService {
 		Ingredient ingredient = getById(id);
 		ingredient.archive();
 		return ingredientRepository.save(ingredient);
+	}
+
+	private static void requireOwner(String createdBy) {
+		if (!createdBy.equals(getCurrentUserId())) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only the creator can modify this content");
+		}
 	}
 
 	private static String getCurrentUserId() {
