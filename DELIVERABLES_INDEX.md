@@ -7,9 +7,9 @@ Central index for SWE-573 (CulinaryGraph) artifacts. Links point to the **defaul
 
 | Deliverable | Location | Notes |
 |-------------|----------|--------|
-| **Software Requirements Specification** | [reports/SRS.md](https://github.com/yaseminyumak/SWE-573/blob/main/reports/SRS.md) | Functional & non-functional requirements |
+| **Software Requirements Specification** | [reports/SRS.md](https://github.com/yaseminyumak/SWE-573/blob/main/reports/SRS.md) | Functional & non-functional requirements (**FR-1–FR-21**, **NFR-1–NFR-12**); comments/likes (**FR-19–20**) noted as future release in SRS; **FR-21** (authorship) shall be reflected in list/detail views when implemented |
 | **Software Design (UML)** | See **UML / design artifacts** below | Links only — diagrams are not embedded here |
-| **Scenarios** | [reports/User_Scenarios.md](https://github.com/yaseminyumak/SWE-573/blob/main/reports/User_Scenarios.md) | Personas & narrative scenarios |
+| **Scenarios** | [reports/User_Scenarios.md](https://github.com/yaseminyumak/SWE-573/blob/main/reports/User_Scenarios.md) | Personas & narrative scenarios; aligned with revised SRS (list filters, no admin publication gate in scope) |
 | **Mockups** | [reports/mock-ups/](https://github.com/yaseminyumak/SWE-573/tree/main/reports/mock-ups) | Screen mockups (PNG) |
 | **Project Plan, Communication Plan, RACI** | [reports/ProjectPlan.md](https://github.com/yaseminyumak/SWE-573/blob/main/reports/ProjectPlan.md) | Phases, sprints, milestones, communication matrix, RACI |
 | **Main contributions** | [reports/RELEASE_NOTES.md](https://github.com/yaseminyumak/SWE-573/blob/main/reports/RELEASE_NOTES.md) · [reports/PROJECT_OVERVIEW.md](https://github.com/yaseminyumak/SWE-573/blob/main/reports/PROJECT_OVERVIEW.md) | Product/architecture summary · implementation & stack overview |
@@ -27,6 +27,7 @@ Do not embed binaries in the formal report; point reviewers here or to your wiki
 |----------|------|
 | **Use case diagram** (Draw.io source) | [reports/CulinaryGraph_UseCaseDiagram.drawio](https://github.com/yaseminyumak/SWE-573/blob/main/reports/CulinaryGraph_UseCaseDiagram.drawio) |
 | **Class diagram** (Mermaid source) | [reports/class_diagram.mermaid](https://github.com/yaseminyumak/SWE-573/blob/main/reports/class_diagram.mermaid) |
+| **Sequence diagram** (contributor creates recipe) | [reports/add-recipe-sequence.png](https://github.com/yaseminyumak/SWE-573/blob/main/reports/add-recipe-sequence.png) |
 
 Exported PNG/SVG (if present under `reports/`) can use the same `blob/main/reports/...` pattern.
 

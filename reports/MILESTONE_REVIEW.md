@@ -33,7 +33,7 @@ Statuses: **Not started · In progress · Completed** (= implemented, tested, do
 | Deliverable | Status | Link |
 |-------------|--------|------|
 | Software Requirements Specification | **Completed** | [reports/SRS.md](https://github.com/yaseminyumak/SWE-573/blob/main/reports/SRS.md) |
-| Software Design (UML) | **In progress** (use case + class diagram; sequence diagrams ad hoc) | [reports/CulinaryGraph_UseCaseDiagram.drawio](https://github.com/yaseminyumak/SWE-573/blob/main/reports/CulinaryGraph_UseCaseDiagram.drawio) · [reports/class_diagram.mermaid](https://github.com/yaseminyumak/SWE-573/blob/main/reports/class_diagram.mermaid) |
+| Software Design (UML) | **In progress** (use case + class diagram; sequence diagram for create recipe) | [reports/CulinaryGraph_UseCaseDiagram.drawio](https://github.com/yaseminyumak/SWE-573/blob/main/reports/CulinaryGraph_UseCaseDiagram.drawio) · [reports/class_diagram.mermaid](https://github.com/yaseminyumak/SWE-573/blob/main/reports/class_diagram.mermaid) · [reports/add-recipe-sequence.png](https://github.com/yaseminyumak/SWE-573/blob/main/reports/add-recipe-sequence.png) |
 | Scenarios | **Completed** | [reports/User_Scenarios.md](https://github.com/yaseminyumak/SWE-573/blob/main/reports/User_Scenarios.md) |
 | Mockups | **Completed** (key flows) | [reports/mock-ups/](https://github.com/yaseminyumak/SWE-573/tree/main/reports/mock-ups) |
 | Project Plan, Communication Plan, RACI | **Completed** | [reports/ProjectPlan.md](https://github.com/yaseminyumak/SWE-573/blob/main/reports/ProjectPlan.md) |
@@ -52,8 +52,9 @@ Statuses: **Not started · In progress · Completed** (= implemented, tested, do
 | **Catalog: Ingredients** | **Completed (MVP)** | `IngredientController` (`/api/catalog/ingredients`); supports region/country, seasons, substitutes, provenance story, related techniques |
 | **Identity & access (Keycloak)** | **Completed** | OIDC login/register, JWT validation in Spring Security; realm roles mapped to `ROLE_CONTRIBUTOR` / `ROLE_VALIDATOR` |
 | **Knowledge Map** (graph view) | **Not started** (UI placeholder only) | Roadmap; data already includes inter-entity relationships needed to bootstrap the view |
-| **Search & filters** | **In progress** | Search entry in app shell; advanced server-side filters (by region, season) pending |
-| **Moderation / publication workflow** | **In progress** | Domain status lifecycle exists; admin verification UI not implemented |
+| **Search & filters** | **In progress** | Search entry in app shell; dedicated search page still minimal; list-page filters (e.g. techniques/ingredients by country, region, season) align with revised SRS (FR-5, FR-9) |
+| **Comments & likes** | **Not started** | Required by revised SRS (**FR-19**, **FR-20**); application API and UI not yet implemented |
+| **Admin moderation / publication gate** | **Out of SRS scope** | The [SRS](https://github.com/yaseminyumak/SWE-573/blob/main/reports/SRS.md) was revised to drop admin verification, publication-only discovery, and related requirements; any `DRAFT` / status fields in the codebase are optional implementation detail unless reintroduced by a future issue |
 
 ---
 
@@ -64,7 +65,7 @@ Statuses: **Not started · In progress · Completed** (= implemented, tested, do
 - **Cultural context in detail views.** Recipe / technique / ingredient pages surface **origin story**, **cultural notes**, and **provenance story** alongside the “how-to,” reflecting the project’s focus on **cultural heritage**, not just dishes.
 - **Region-first metadata.** Every primary entity has **region** and **country** fields visible in lists/detail to support browsing “by place,” which matches the home cook / researcher personas in [`User_Scenarios.md`](https://github.com/yaseminyumak/SWE-573/blob/main/reports/User_Scenarios.md).
 - **Substitutions and seasonality.** Ingredients display **culturally appropriate substitutes** and **seasons**, supporting authenticity-aware cooking.
-- **Lightweight, mobile-friendly shell.** Top navigation surfaces *Home / Techniques / Ingredients / Recipes* with a single search box; auth state is reflected immediately (Login → Profile / Logout) after Keycloak callbacks.
+- **Desktop-first shell (per revised SRS).** Top navigation surfaces *Home / Techniques / Ingredients / Recipes* with a search entry; auth state is reflected immediately (Login → Profile / Logout) after Keycloak callbacks. Primary layout targets desktop browsers; smaller viewports are best-effort only.
 - **Forms guided by domain shape.** Recipe and ingredient forms guide contributors to the structured fields (steps with order, ingredient lines with quantity/unit, related techniques) so contributions stay consistent.
 
 ### Key user flows (mockups)
