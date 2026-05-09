@@ -20,6 +20,10 @@ vi.mock('react-router-dom', async () => {
   }
 })
 
+vi.mock('../../auth/AuthProvider', () => ({
+  useAuth: () => ({ keycloak: { subject: 'test-user-id' } }),
+}))
+
 vi.mock('../../shared/constants/countries', () => ({
   COUNTRIES: ['Select Country', 'Italy', 'France', 'Japan'],
 }))

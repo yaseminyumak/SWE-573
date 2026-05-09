@@ -4,6 +4,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createIngredient, updateIngredient, fetchIngredient, fetchTechniques } from './catalogApi'
 import type { CreateIngredientRequest, Season } from './catalogApi'
 import RelationPicker from '../../shared/components/RelationPicker'
+import ImageManager from '../../shared/components/ImageManager'
+import { useAuth } from '../../auth/AuthProvider'
 import { COUNTRIES } from '../../shared/constants/countries'
 
 const ALL_SEASONS: Season[] = ['SPRING', 'SUMMER', 'FALL', 'WINTER', 'YEAR_ROUND']
@@ -16,6 +18,7 @@ export default function IngredientFormPage() {
   const isEdit = !!id
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const { keycloak } = useAuth()
 
   const [name, setName] = useState('')
   const [country, setCountry] = useState('')
@@ -84,6 +87,13 @@ export default function IngredientFormPage() {
     <div className="max-w-3xl mx-auto px-6 py-6">
       <h1 className="text-xl font-bold text-[#171433]">{isEdit ? 'Edit Ingredient' : 'New Ingredient'}</h1>
       <hr className="my-3 border-[#d67ec9]" />
+
+      {isEdit && existing?.createdBy === keycloak?.subject && (
+        <div className="mb-6">
+          <label className="block text-sm font-medium text-gray-700 mb-2">Photos</label>
+          <ImageManager entityType="INGREDIENT" entityId={id!} canEdit={true} />
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>

@@ -1,15 +1,14 @@
 import { useRef, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { fetchImages, uploadImage, deleteImage, imageUrl } from '../api/imageApi'
-import { useAuth } from '../../auth/AuthProvider'
 
 interface Props {
   entityType: string
   entityId: string
+  canEdit?: boolean
 }
 
-export default function ImageManager({ entityType, entityId }: Props) {
-  const { isAuthenticated } = useAuth()
+export default function ImageManager({ entityType, entityId, canEdit = false }: Props) {
   const queryClient = useQueryClient()
   const fileRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
@@ -57,7 +56,7 @@ export default function ImageManager({ entityType, entityId }: Props) {
             alt={active.filename}
             className="w-full h-80 object-cover"
           />
-          {isAuthenticated && (
+          {canEdit && (
             <button
               type="button"
               onClick={() => handleDelete(active.id, activeIdx)}
@@ -93,7 +92,7 @@ export default function ImageManager({ entityType, entityId }: Props) {
           </button>
         ))}
 
-        {isAuthenticated && (
+        {canEdit && (
           <>
             <input
               ref={fileRef}
