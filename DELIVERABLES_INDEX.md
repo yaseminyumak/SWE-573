@@ -8,6 +8,7 @@ Central index for SWE-573 (CulinaryGraph) artifacts. Links point to the **defaul
 | Deliverable | Location | Notes |
 |-------------|----------|--------|
 | **Software Requirements Specification** | [reports/SRS.md](https://github.com/yaseminyumak/SWE-573/blob/main/reports/SRS.md) | Functional & non-functional requirements (**FR-1–FR-21**, **NFR-1–NFR-12**); comments/likes (**FR-19–20**) noted as future release in SRS; **FR-21** (authorship) shall be reflected in list/detail views when implemented |
+| **User Manual** | [reports/USER_MANUAL.md](https://github.com/yaseminyumak/SWE-573/blob/main/reports/USER_MANUAL.md) | End-user guide: auth, browse, search, filters, recipes, catalog, profile, images; mockup links; planned vs shipped social features |
 | **Software Design (UML)** | See **UML / design artifacts** below | Links only — diagrams are not embedded here |
 | **Scenarios** | [reports/User_Scenarios.md](https://github.com/yaseminyumak/SWE-573/blob/main/reports/User_Scenarios.md) | Personas & narrative scenarios; aligned with revised SRS (list filters, no admin publication gate in scope) |
 | **Mockups** | [reports/mock-ups/](https://github.com/yaseminyumak/SWE-573/tree/main/reports/mock-ups) | Screen mockups (PNG) |
