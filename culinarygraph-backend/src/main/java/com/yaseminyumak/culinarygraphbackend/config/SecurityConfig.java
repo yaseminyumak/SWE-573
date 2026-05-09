@@ -29,6 +29,7 @@ public class SecurityConfig {
 				.requestMatchers(org.springframework.http.HttpMethod.POST, "/api/**").authenticated()
 				.requestMatchers(org.springframework.http.HttpMethod.PUT, "/api/**").authenticated()
 				.requestMatchers(org.springframework.http.HttpMethod.DELETE, "/api/**").authenticated()
+				.requestMatchers("/openapi.yaml", "/docs", "/docs.html").permitAll()
 				.anyRequest().authenticated()
 			)
 			.oauth2ResourceServer(oauth2 -> oauth2
