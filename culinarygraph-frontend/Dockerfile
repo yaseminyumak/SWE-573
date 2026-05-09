@@ -7,7 +7,7 @@ ARG VITE_API_BASE=/api
 ENV VITE_KEYCLOAK_URL=$VITE_KEYCLOAK_URL
 ENV VITE_API_BASE=$VITE_API_BASE
 
-COPY package.json package-lock.json* ./
+COPY package.json package-lock.json* .npmrc* ./
 RUN npm config set strict-ssl false && npm ci
 COPY . .
 RUN npm run build

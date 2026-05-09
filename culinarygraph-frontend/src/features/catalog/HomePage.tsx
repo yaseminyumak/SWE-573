@@ -1,29 +1,18 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
-import { useState, useMemo } from 'react'
 import { fetchIngredients, fetchTechniques } from './catalogApi'
 import { fetchRecipes } from '../recipe/recipeApi'
 import EntityCardImage from '../../shared/components/EntityCardImage'
 import SocialCounts from '../social/SocialCounts'
+import WorldMapSection from './WorldMapSection'
 
 type ItemType = 'recipe' | 'ingredient' | 'technique'
 interface CardItem { type: ItemType; id: string; name: string; desc: string; location: string }
 
 export default function HomePage() {
-  const [selectedCountry, setSelectedCountry] = useState('')
-
-  const { data: ingredients } = useQuery({ queryKey: ['catalog', 'ingredients'], queryFn: fetchIngredients })
-  const { data: techniques } = useQuery({ queryKey: ['catalog', 'techniques'], queryFn: fetchTechniques })
-  const { data: recipes } = useQuery({ queryKey: ['recipes'], queryFn: fetchRecipes })
-
-  const countries = useMemo(() => {
-    const set = new Set([
-      ...(ingredients?.map((i) => i.country).filter(Boolean) ?? []),
-      ...(techniques?.map((t) => t.country).filter(Boolean) ?? []),
-      ...(recipes?.map((r) => r.country).filter(Boolean) ?? []),
-    ] as string[])
-    return Array.from(set).sort()
-  }, [ingredients, techniques, recipes])
+  const { data: ingredients } = useQuery({ queryKey: ['catalog', 'ingredients'], queryFn: fetchIngredients, staleTime: 0 })
+  const { data: techniques } = useQuery({ queryKey: ['catalog', 'techniques'], queryFn: fetchTechniques, staleTime: 0 })
+  const { data: recipes } = useQuery({ queryKey: ['recipes'], queryFn: fetchRecipes, staleTime: 0 })
 
   const toItem = (type: ItemType, id: string, name: string, desc: string, country?: string | null, region?: string | null) =>
     ({ type, id, name, desc, location: [country, region].filter(Boolean).join(', ') })
@@ -51,24 +40,12 @@ export default function HomePage() {
   return (
     <div className="max-w-5xl mx-auto px-6 py-8 space-y-10">
 
-      {/* Knowledge Map */}
-      <section>
-        <h2 className="text-base font-bold text-[#171433] mb-3">Knowledge Map</h2>
-        <div className="border border-[#d67ec9] rounded-xl bg-white flex items-center justify-center h-48 text-sm text-gray-400">
-          Graph/network visualization placeholder (Nodes: Techniques, Ingredients, Regions)
-        </div>
-        <div className="mt-3 flex items-center gap-3">
-          <label className="text-sm font-medium text-[#171433]">Country Filter:</label>
-          <select
-            value={selectedCountry || 'All Countries'}
-            onChange={(e) => setSelectedCountry(e.target.value === 'All Countries' ? '' : e.target.value)}
-            className="border border-gray-300 rounded px-3 py-1.5 text-sm bg-white focus:outline-none focus:border-[#8c2d9c]"
-          >
-            <option>All Countries</option>
-            {countries.map((c) => <option key={c}>{c}</option>)}
-          </select>
-        </div>
-      </section>
+      {/* World Food Map */}
+      <WorldMapSection
+        recipes={recipes ?? []}
+        ingredients={ingredients ?? []}
+        techniques={techniques ?? []}
+      />
 
       {/* Highlighted Content */}
       <section>
