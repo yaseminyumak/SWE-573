@@ -265,7 +265,7 @@ export default function RecipeListPage() {
                       <p className="text-xs text-[#8c2d9c] mt-1 font-medium">{[r.country, r.region].filter(Boolean).join(', ')}</p>
                     )}
                     {r.createdBy && (
-                      <p className="text-xs text-gray-400 mt-2">By {r.createdBy}</p>
+                      <p className="text-xs text-gray-400 mt-2">By <Link to={`/profile/${r.createdBy}`} onClick={(e) => e.stopPropagation()} className="hover:text-[#8c2d9c] hover:underline">{r.createdBy}</Link></p>
                     )}
                   </div>
                 </Link>
