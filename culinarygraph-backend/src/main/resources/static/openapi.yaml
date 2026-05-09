@@ -1,0 +1,1373 @@
+openapi: 3.0.3
+info:
+  title: CulinaryGraph API
+  version: "1.0.0"
+  description: |
+    REST API for **CulinaryGraph** — a collaborative culinary knowledge platform for documenting
+    recipes, ingredients, and cooking techniques from around the world.
+
+    ## Authentication
+
+    Authentication is handled by **Keycloak**. Protected endpoints require a Bearer JWT token.
+
+    **Obtain a token:**
+    ```http
+    POST http://localhost:8180/realms/culinarygraph/protocol/openid-connect/token
+    Content-Type: application/x-www-form-urlencoded
+
+    grant_type=password
+    client_id=culinarygraph-app
+    username=<username>
+    password=<password>
+    ```
+
+    Then pass the `access_token` value as:
+    ```
+    Authorization: Bearer <access_token>
+    ```
+
+    ## Authorization Rules
+
+    | Method | Auth Required | Ownership |
+    |---|---|---|
+    | GET | No | — |
+    | POST | Yes (JWT) | Sets `createdBy` to caller |
+    | PUT | Yes (JWT) | Only creator may edit (403 otherwise) |
+    | DELETE | Yes (JWT) | Only creator may delete (403 otherwise) |
+
+servers:
+  - url: http://localhost:8080
+    description: Direct backend (local dev)
+  - url: http://localhost
+    description: Via nginx proxy (Docker Compose)
+
+tags:
+  - name: Recipes
+    description: Manage culinary recipes — create, read, update, archive, and delete.
+  - name: Ingredients
+    description: Catalog of culinary ingredients with cultural, seasonal, and substitution metadata.
+  - name: Techniques
+    description: Catalog of cooking techniques with step-by-step instructions and cultural context.
+  - name: Likes
+    description: Toggle and query likes for any content entity.
+  - name: Comments
+    description: Add, read, and delete comments on any content entity.
+  - name: Images
+    description: Upload and serve photos for recipes, ingredients, and techniques.
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: >
+        Keycloak JWT. Obtain via `POST /realms/culinarygraph/protocol/openid-connect/token`
+        on the Keycloak server (port 8180).
+
+  schemas:
+
+    # ── Enums ──────────────────────────────────────────────────────────────────
+    DifficultyLevel:
+      type: string
+      enum: [EASY, MEDIUM, HARD]
+      description: Difficulty level of a recipe or technique.
+
+    PublishStatus:
+      type: string
+      enum: [DRAFT, PUBLISHED, ARCHIVED]
+      description: Publication status of a content item.
+
+    Season:
+      type: string
+      enum: [SPRING, SUMMER, FALL, WINTER, YEAR_ROUND]
+      description: Season in which an ingredient is typically available.
+
+    # ── Recipe ─────────────────────────────────────────────────────────────────
+    RecipeStepInput:
+      type: object
+      required: [order, instruction]
+      properties:
+        order:
+          type: integer
+          minimum: 1
+          example: 1
+        instruction:
+          type: string
+          example: "Slice eggplants into 1 cm rounds and salt generously."
+
+    RecipeIngredientInput:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          example: "Eggplant"
+        quantity:
+          type: string
+          example: "2"
+        unit:
+          type: string
+          example: "pcs"
+        ingredientId:
+          type: string
+          format: uuid
+          nullable: true
+          description: Optional reference to a catalog Ingredient.
+
+    CreateRecipeRequest:
+      type: object
+      required: [title, steps, ingredients]
+      properties:
+        title:
+          type: string
+          example: "Şakşuka"
+        description:
+          type: string
+          example: "A Turkish vegetable dish of fried eggplant and peppers in tomato sauce."
+        difficulty:
+          $ref: '#/components/schemas/DifficultyLevel'
+        durationMinutes:
+          type: integer
+          example: 35
+        steps:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecipeStepInput'
+        ingredients:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecipeIngredientInput'
+        country:
+          type: string
+          example: "Turkey"
+        tags:
+          type: array
+          items:
+            type: string
+          example: ["vegetarian", "mediterranean", "summer"]
+        originStory:
+          type: string
+          example: "A staple of Turkish meyhane culture, loved since the Ottoman era."
+        associatedTechniqueIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+
+    RecipeStepDto:
+      type: object
+      properties:
+        order:
+          type: integer
+        instruction:
+          type: string
+
+    RecipeIngredientDto:
+      type: object
+      properties:
+        name:
+          type: string
+        quantity:
+          type: string
+        unit:
+          type: string
+        ingredientId:
+          type: string
+          format: uuid
+          nullable: true
+
+    RecipeResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        description:
+          type: string
+        difficulty:
+          $ref: '#/components/schemas/DifficultyLevel'
+        durationMinutes:
+          type: integer
+        status:
+          $ref: '#/components/schemas/PublishStatus'
+        createdBy:
+          type: string
+          description: Keycloak `preferred_username` of the creator.
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        steps:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecipeStepDto'
+        ingredients:
+          type: array
+          items:
+            $ref: '#/components/schemas/RecipeIngredientDto'
+        country:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        originStory:
+          type: string
+        associatedTechniqueIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+
+    # ── Ingredient ─────────────────────────────────────────────────────────────
+    CreateIngredientRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          example: "Sumac"
+        description:
+          type: string
+          example: "A tangy, ruby-red spice ground from dried sumac berries."
+        country:
+          type: string
+          example: "Turkey"
+        region:
+          type: string
+          example: "Middle East"
+        seasons:
+          type: array
+          items:
+            $ref: '#/components/schemas/Season'
+          example: ["YEAR_ROUND"]
+        substitutes:
+          type: array
+          items:
+            type: string
+          example: ["lemon zest", "tamarind powder"]
+        provenanceStory:
+          type: string
+        relatedTechniqueIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+
+    IngredientResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        country:
+          type: string
+        region:
+          type: string
+        seasons:
+          type: array
+          items:
+            $ref: '#/components/schemas/Season'
+        substitutes:
+          type: array
+          items:
+            type: string
+        provenanceStory:
+          type: string
+        relatedTechniqueIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        status:
+          $ref: '#/components/schemas/PublishStatus'
+        createdBy:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    # ── Technique ──────────────────────────────────────────────────────────────
+    TechniqueStepInput:
+      type: object
+      required: [order, instruction]
+      properties:
+        order:
+          type: integer
+          minimum: 1
+        instruction:
+          type: string
+
+    CreateTechniqueRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          example: "Simit Şekillendirme"
+        description:
+          type: string
+          example: "Traditional ring-shaping technique for Turkish sesame bread."
+        country:
+          type: string
+          example: "Turkey"
+        region:
+          type: string
+        difficulty:
+          $ref: '#/components/schemas/DifficultyLevel'
+        steps:
+          type: array
+          items:
+            $ref: '#/components/schemas/TechniqueStepInput'
+        ingredientIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        culturalNotes:
+          type: string
+          example: "Simit has been sold on Istanbul streets since the 16th century."
+        prerequisites:
+          type: string
+          example: "Basic bread dough preparation."
+        relatedTechniqueIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+
+    TechniqueStepDto:
+      type: object
+      properties:
+        order:
+          type: integer
+        instruction:
+          type: string
+
+    TechniqueResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        description:
+          type: string
+        country:
+          type: string
+        region:
+          type: string
+        difficulty:
+          $ref: '#/components/schemas/DifficultyLevel'
+        steps:
+          type: array
+          items:
+            $ref: '#/components/schemas/TechniqueStepDto'
+        ingredientIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        culturalNotes:
+          type: string
+        prerequisites:
+          type: string
+        relatedTechniqueIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+        status:
+          $ref: '#/components/schemas/PublishStatus'
+        createdBy:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    # ── Social ─────────────────────────────────────────────────────────────────
+    ToggleLikeRequest:
+      type: object
+      required: [entityType, entityId]
+      properties:
+        entityType:
+          type: string
+          enum: [RECIPE, INGREDIENT, TECHNIQUE]
+          example: "RECIPE"
+        entityId:
+          type: string
+          format: uuid
+          example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+
+    LikeStatusResponse:
+      type: object
+      properties:
+        count:
+          type: integer
+          format: int64
+          description: Total number of likes for this entity.
+          example: 14
+        likedByMe:
+          type: boolean
+          description: Whether the authenticated user has liked this entity. Always false for unauthenticated requests.
+          example: true
+
+    LikedEntityResponse:
+      type: object
+      properties:
+        entityType:
+          type: string
+          example: "RECIPE"
+        entityId:
+          type: string
+          format: uuid
+
+    AddCommentRequest:
+      type: object
+      required: [entityType, entityId, body]
+      properties:
+        entityType:
+          type: string
+          enum: [RECIPE, INGREDIENT, TECHNIQUE]
+          example: "RECIPE"
+        entityId:
+          type: string
+          format: uuid
+          example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+        body:
+          type: string
+          example: "This recipe is absolutely delicious — highly recommend!"
+
+    CommentResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        username:
+          type: string
+          description: Keycloak `preferred_username` of the commenter.
+          example: "yasemin.yumak"
+        body:
+          type: string
+          example: "This recipe is absolutely delicious!"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2025-04-01T10:30:00Z"
+
+    # ── Images ─────────────────────────────────────────────────────────────────
+    ImageMetaResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        filename:
+          type: string
+          example: "saksuka.jpg"
+        contentType:
+          type: string
+          example: "image/jpeg"
+        displayOrder:
+          type: integer
+          description: Zero-based ordering index for multiple images.
+          example: 0
+        createdAt:
+          type: string
+          format: date-time
+
+paths:
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Recipes
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  /api/recipes:
+    get:
+      tags: [Recipes]
+      summary: List all recipes
+      description: Returns all recipes. Public — no authentication required.
+      operationId: listRecipes
+      responses:
+        '200':
+          description: Array of recipes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RecipeResponse'
+              example:
+                - id: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                  title: "Şakşuka"
+                  description: "A Turkish vegetable dish of fried eggplant and peppers in tomato sauce."
+                  difficulty: "EASY"
+                  durationMinutes: 35
+                  status: "PUBLISHED"
+                  createdBy: "yasemin.yumak"
+                  createdAt: "2025-03-10T09:00:00Z"
+                  updatedAt: "2025-03-10T09:00:00Z"
+                  country: "Turkey"
+                  tags: ["vegetarian", "mediterranean"]
+                  steps:
+                    - order: 1
+                      instruction: "Slice eggplants and salt for 20 minutes."
+                  ingredients:
+                    - name: "Eggplant"
+                      quantity: "2"
+                      unit: "pcs"
+                      ingredientId: null
+
+    post:
+      tags: [Recipes]
+      summary: Create a recipe
+      description: Creates a new recipe. The `createdBy` field is automatically set to the authenticated user's username.
+      operationId: createRecipe
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRecipeRequest'
+            example:
+              title: "Şakşuka"
+              description: "A Turkish vegetable dish of fried eggplant and peppers in tomato sauce."
+              difficulty: "EASY"
+              durationMinutes: 35
+              country: "Turkey"
+              tags: ["vegetarian", "mediterranean"]
+              steps:
+                - order: 1
+                  instruction: "Slice eggplants into 1 cm rounds and salt for 20 minutes."
+                - order: 2
+                  instruction: "Fry eggplant slices in olive oil until golden. Set aside."
+                - order: 3
+                  instruction: "Sauté peppers and garlic, add crushed tomatoes, simmer 10 minutes."
+              ingredients:
+                - name: "Eggplant"
+                  quantity: "2"
+                  unit: "pcs"
+                - name: "Green pepper"
+                  quantity: "3"
+                  unit: "pcs"
+                - name: "Crushed tomatoes"
+                  quantity: "400"
+                  unit: "g"
+      responses:
+        '201':
+          description: Recipe created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecipeResponse'
+        '400':
+          description: Validation error (missing required fields)
+        '401':
+          description: Unauthorized — JWT token missing or invalid
+
+  /api/recipes/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Recipe UUID
+        schema:
+          type: string
+          format: uuid
+          example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+
+    get:
+      tags: [Recipes]
+      summary: Get a recipe by ID
+      description: Returns a single recipe. Public.
+      operationId: getRecipe
+      responses:
+        '200':
+          description: Recipe found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecipeResponse'
+        '404':
+          description: Recipe not found
+
+    put:
+      tags: [Recipes]
+      summary: Update a recipe
+      description: Replaces all fields of the recipe. Only the original creator can update (returns 403 otherwise).
+      operationId: updateRecipe
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRecipeRequest'
+      responses:
+        '200':
+          description: Recipe updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecipeResponse'
+        '400':
+          description: Validation error
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden — authenticated user is not the creator
+        '404':
+          description: Recipe not found
+
+    delete:
+      tags: [Recipes]
+      summary: Delete a recipe
+      description: Permanently deletes the recipe. Only the original creator can delete (returns 403 otherwise).
+      operationId: deleteRecipe
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Recipe deleted
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden — authenticated user is not the creator
+        '404':
+          description: Recipe not found
+
+  /api/recipes/{id}/archive:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      tags: [Recipes]
+      summary: Archive a recipe
+      description: Sets the recipe status to `ARCHIVED`. Archived recipes remain visible but are hidden from the default listing. Only the creator can archive.
+      operationId: archiveRecipe
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Recipe archived
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RecipeResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden — not the creator
+        '404':
+          description: Recipe not found
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Ingredients
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  /api/catalog/ingredients:
+    get:
+      tags: [Ingredients]
+      summary: List all ingredients
+      description: Returns all catalog ingredients. Public.
+      operationId: listIngredients
+      responses:
+        '200':
+          description: Array of ingredients
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/IngredientResponse'
+              example:
+                - id: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+                  name: "Sumac"
+                  description: "A tangy, ruby-red spice ground from dried sumac berries."
+                  country: "Turkey"
+                  region: "Middle East"
+                  seasons: ["YEAR_ROUND"]
+                  substitutes: ["lemon zest", "tamarind powder"]
+                  status: "PUBLISHED"
+                  createdBy: "yasemin.yumak"
+                  createdAt: "2025-03-15T08:00:00Z"
+                  updatedAt: "2025-03-15T08:00:00Z"
+
+    post:
+      tags: [Ingredients]
+      summary: Create an ingredient
+      description: Adds a new ingredient to the catalog. Requires authentication.
+      operationId: createIngredient
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateIngredientRequest'
+            example:
+              name: "Sumac"
+              description: "A tangy, ruby-red spice ground from dried sumac berries."
+              country: "Turkey"
+              region: "Middle East"
+              seasons: ["YEAR_ROUND"]
+              substitutes: ["lemon zest", "tamarind powder"]
+              provenanceStory: "Used in Middle Eastern cuisine for thousands of years, sumac grows wild across Turkey and the Levant."
+      responses:
+        '201':
+          description: Ingredient created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IngredientResponse'
+        '400':
+          description: Validation error
+        '401':
+          description: Unauthorized
+
+  /api/catalog/ingredients/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Ingredient UUID
+        schema:
+          type: string
+          format: uuid
+
+    get:
+      tags: [Ingredients]
+      summary: Get an ingredient by ID
+      description: Public.
+      operationId: getIngredient
+      responses:
+        '200':
+          description: Ingredient found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IngredientResponse'
+        '404':
+          description: Not found
+
+    put:
+      tags: [Ingredients]
+      summary: Update an ingredient
+      description: Only the original creator can update (returns 403 otherwise).
+      operationId: updateIngredient
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateIngredientRequest'
+      responses:
+        '200':
+          description: Ingredient updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IngredientResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden — not the creator
+        '404':
+          description: Not found
+
+    delete:
+      tags: [Ingredients]
+      summary: Delete an ingredient
+      description: Only the original creator can delete (returns 403 otherwise).
+      operationId: deleteIngredient
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Deleted
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden — not the creator
+        '404':
+          description: Not found
+
+  /api/catalog/ingredients/{id}/archive:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      tags: [Ingredients]
+      summary: Archive an ingredient
+      description: Sets status to `ARCHIVED`. Only the creator can archive.
+      operationId: archiveIngredient
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Ingredient archived
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IngredientResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden — not the creator
+        '404':
+          description: Not found
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Techniques
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  /api/catalog/techniques:
+    get:
+      tags: [Techniques]
+      summary: List all techniques
+      description: Returns all catalog techniques. Public.
+      operationId: listTechniques
+      responses:
+        '200':
+          description: Array of techniques
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TechniqueResponse'
+              example:
+                - id: "b2c3d4e5-f6a7-8901-bcde-f12345678901"
+                  name: "Simit Şekillendirme"
+                  description: "Traditional ring-shaping technique for Turkish sesame bread."
+                  country: "Turkey"
+                  difficulty: "MEDIUM"
+                  culturalNotes: "Simit has been sold on Istanbul streets since the 16th century."
+                  status: "PUBLISHED"
+                  createdBy: "yasemin.yumak"
+                  createdAt: "2025-03-20T11:00:00Z"
+                  updatedAt: "2025-03-20T11:00:00Z"
+
+    post:
+      tags: [Techniques]
+      summary: Create a technique
+      description: Adds a new technique to the catalog. Requires authentication.
+      operationId: createTechnique
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTechniqueRequest'
+            example:
+              name: "Simit Şekillendirme"
+              description: "Traditional ring-shaping technique for Turkish sesame bread."
+              country: "Turkey"
+              difficulty: "MEDIUM"
+              culturalNotes: "Simit has been sold on Istanbul streets since the 16th century."
+              prerequisites: "Basic bread dough kneading."
+              steps:
+                - order: 1
+                  instruction: "Roll dough into a long rope about 60 cm in length."
+                - order: 2
+                  instruction: "Fold the rope in half and twist the two halves together."
+                - order: 3
+                  instruction: "Join the ends to form a ring, pressing firmly to seal."
+                - order: 4
+                  instruction: "Dip the ring in pekmez (grape molasses) then coat in sesame seeds."
+      responses:
+        '201':
+          description: Technique created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TechniqueResponse'
+        '400':
+          description: Validation error
+        '401':
+          description: Unauthorized
+
+  /api/catalog/techniques/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Technique UUID
+        schema:
+          type: string
+          format: uuid
+
+    get:
+      tags: [Techniques]
+      summary: Get a technique by ID
+      description: Public.
+      operationId: getTechnique
+      responses:
+        '200':
+          description: Technique found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TechniqueResponse'
+        '404':
+          description: Not found
+
+    put:
+      tags: [Techniques]
+      summary: Update a technique
+      description: Only the original creator can update (returns 403 otherwise).
+      operationId: updateTechnique
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTechniqueRequest'
+      responses:
+        '200':
+          description: Technique updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TechniqueResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden — not the creator
+        '404':
+          description: Not found
+
+    delete:
+      tags: [Techniques]
+      summary: Delete a technique
+      description: Only the original creator can delete (returns 403 otherwise).
+      operationId: deleteTechnique
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Deleted
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden — not the creator
+        '404':
+          description: Not found
+
+  /api/catalog/techniques/{id}/archive:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    put:
+      tags: [Techniques]
+      summary: Archive a technique
+      description: Sets status to `ARCHIVED`. Only the creator can archive.
+      operationId: archiveTechnique
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Technique archived
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TechniqueResponse'
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden — not the creator
+        '404':
+          description: Not found
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Likes
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  /api/social/likes:
+    get:
+      tags: [Likes]
+      summary: Get like status for an entity
+      description: |
+        Returns the total like count and whether the current user has liked the entity.
+        `likedByMe` is always `false` for unauthenticated requests. Public.
+      operationId: getLikeStatus
+      parameters:
+        - name: entityType
+          in: query
+          required: true
+          description: Type of content entity
+          schema:
+            type: string
+            enum: [RECIPE, INGREDIENT, TECHNIQUE]
+          example: RECIPE
+        - name: entityId
+          in: query
+          required: true
+          description: UUID of the entity
+          schema:
+            type: string
+            format: uuid
+          example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+      responses:
+        '200':
+          description: Like status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LikeStatusResponse'
+              example:
+                count: 14
+                likedByMe: true
+
+    post:
+      tags: [Likes]
+      summary: Toggle like on an entity
+      description: |
+        If the authenticated user has already liked the entity, the like is **removed**.
+        If not, a like is **added**. Returns the updated status in a single round trip.
+        Requires authentication.
+      operationId: toggleLike
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ToggleLikeRequest'
+            example:
+              entityType: "RECIPE"
+              entityId: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+      responses:
+        '200':
+          description: Updated like status after toggle
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LikeStatusResponse'
+              example:
+                count: 15
+                likedByMe: true
+        '401':
+          description: Unauthorized
+
+  /api/social/likes/mine:
+    get:
+      tags: [Likes]
+      summary: List entities liked by the current user
+      description: Returns all entities the authenticated user has liked. Requires authentication.
+      operationId: getMyLikes
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of liked entities
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LikedEntityResponse'
+              example:
+                - entityType: "RECIPE"
+                  entityId: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+                - entityType: "INGREDIENT"
+                  entityId: "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+        '401':
+          description: Unauthorized
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Comments
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  /api/social/comments:
+    get:
+      tags: [Comments]
+      summary: List comments for an entity
+      description: Returns comments in chronological order (oldest first). Public.
+      operationId: listComments
+      parameters:
+        - name: entityType
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [RECIPE, INGREDIENT, TECHNIQUE]
+          example: RECIPE
+        - name: entityId
+          in: query
+          required: true
+          schema:
+            type: string
+            format: uuid
+          example: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+      responses:
+        '200':
+          description: List of comments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CommentResponse'
+              example:
+                - id: "c3d4e5f6-a7b8-9012-cdef-123456789012"
+                  username: "yasemin.yumak"
+                  body: "This recipe is absolutely delicious — highly recommend!"
+                  createdAt: "2025-04-01T10:30:00Z"
+
+    post:
+      tags: [Comments]
+      summary: Add a comment to an entity
+      description: Creates a new comment. The `username` is automatically set from the JWT token. Requires authentication.
+      operationId: addComment
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddCommentRequest'
+            example:
+              entityType: "RECIPE"
+              entityId: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+              body: "This recipe is absolutely delicious — highly recommend!"
+      responses:
+        '201':
+          description: Comment created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CommentResponse'
+        '400':
+          description: Validation error
+        '401':
+          description: Unauthorized
+
+  /api/social/comments/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Comment UUID
+        schema:
+          type: string
+          format: uuid
+
+    delete:
+      tags: [Comments]
+      summary: Delete a comment
+      description: Only the comment author can delete their own comment (returns 403 otherwise). Requires authentication.
+      operationId: deleteComment
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Comment deleted
+        '401':
+          description: Unauthorized
+        '403':
+          description: Forbidden — authenticated user is not the comment author
+        '404':
+          description: Comment not found
+
+  /api/social/comments/mine:
+    get:
+      tags: [Comments]
+      summary: List comments by the current user
+      description: Returns all comments posted by the authenticated user, ordered newest first. Requires authentication.
+      operationId: getMyComments
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: User's comments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CommentResponse'
+        '401':
+          description: Unauthorized
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Images
+  # ═══════════════════════════════════════════════════════════════════════════
+
+  /api/images/{entityType}/{entityId}:
+    parameters:
+      - name: entityType
+        in: path
+        required: true
+        description: Type of content entity (case-insensitive; stored uppercase internally)
+        schema:
+          type: string
+          enum: [RECIPE, INGREDIENT, TECHNIQUE]
+      - name: entityId
+        in: path
+        required: true
+        description: UUID of the entity
+        schema:
+          type: string
+          format: uuid
+
+    post:
+      tags: [Images]
+      summary: Upload an image for an entity
+      description: |
+        Uploads an image file for a recipe, ingredient, or technique.
+        Multiple images can be uploaded; they are ordered by `displayOrder` (0-based).
+
+        **Limits:** max file size 10 MB, max request size 30 MB.
+
+        Requires authentication.
+      operationId: uploadImage
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Image file (JPEG, PNG, WebP, etc.)
+      responses:
+        '201':
+          description: Image uploaded — returns metadata (no binary data)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ImageMetaResponse'
+              example:
+                id: "d4e5f6a7-b8c9-0123-defa-234567890123"
+                filename: "saksuka.jpg"
+                contentType: "image/jpeg"
+                displayOrder: 0
+                createdAt: "2025-04-01T12:00:00Z"
+        '401':
+          description: Unauthorized
+
+  /api/images/entity/{entityType}/{entityId}:
+    parameters:
+      - name: entityType
+        in: path
+        required: true
+        schema:
+          type: string
+          enum: [RECIPE, INGREDIENT, TECHNIQUE]
+      - name: entityId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+
+    get:
+      tags: [Images]
+      summary: List image metadata for an entity
+      description: Returns metadata for all images associated with the entity. Does **not** return binary data — use `GET /api/images/{id}` to download the actual image. Public.
+      operationId: listEntityImages
+      responses:
+        '200':
+          description: List of image metadata
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ImageMetaResponse'
+
+  /api/images/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: Image UUID
+        schema:
+          type: string
+          format: uuid
+
+    get:
+      tags: [Images]
+      summary: Download an image
+      description: Returns the raw image bytes with the correct `Content-Type` header. Public.
+      operationId: getImage
+      responses:
+        '200':
+          description: Image binary data
+          content:
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+            image/png:
+              schema:
+                type: string
+                format: binary
+            image/webp:
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: Image not found
+
+    delete:
+      tags: [Images]
+      summary: Delete an image
+      description: Permanently deletes the image. Requires authentication.
+      operationId: deleteImage
+      security:
+        - bearerAuth: []
+      responses:
+        '204':
+          description: Image deleted
+        '401':
+          description: Unauthorized
+        '404':
+          description: Image not found

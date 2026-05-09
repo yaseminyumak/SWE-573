@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CulinaryGraph API Docs</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    }
+
+    #header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 28px;
+      background: #171433;
+      border-bottom: 2px solid #8c2d9c;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+    }
+
+    #header .logo-circle {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #8c2d9c, #d67ec9);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    #header h1 {
+      margin: 0;
+      font-size: 15px;
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: 0.01em;
+    }
+
+    #header .badge {
+      margin-left: 4px;
+      padding: 2px 8px;
+      background: #8c2d9c;
+      color: #fff;
+      font-size: 11px;
+      border-radius: 20px;
+      font-weight: 600;
+    }
+
+    #header .spacer { flex: 1; }
+
+    #header .token-hint {
+      font-size: 11px;
+      color: #d67ec9;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="header">
+    <div class="logo-circle">🍽️</div>
+    <h1>CulinaryGraph API</h1>
+    <span class="badge">v1.0.0</span>
+    <div class="spacer"></div>
+    <span class="token-hint">🔒 Protected endpoints require a Keycloak JWT</span>
+  </div>
+
+  <redoc
+    spec-url="/openapi.yaml"
+    expand-responses="200,201"
+    hide-download-button="false"
+    required-props-first="true"
+    sort-props-alphabetically="false"
+    theme='{
+      "colors": {
+        "primary": {
+          "main": "#8c2d9c"
+        }
+      },
+      "typography": {
+        "fontSize": "14px",
+        "fontFamily": "-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif",
+        "headings": {
+          "fontFamily": "-apple-system, BlinkMacSystemFont, Segoe UI, sans-serif",
+          "fontWeight": "700"
+        },
+        "code": {
+          "fontSize": "13px",
+          "fontFamily": "\"SFMono-Regular\", Consolas, \"Liberation Mono\", Menlo, monospace"
+        }
+      },
+      "sidebar": {
+        "backgroundColor": "#171433",
+        "textColor": "#e8e0f0",
+        "activeTextColor": "#d67ec9",
+        "width": "270px"
+      },
+      "rightPanel": {
+        "backgroundColor": "#1e1b3a"
+      },
+      "schema": {
+        "requirePropertiesColor": "#c0392b"
+      }
+    }'
+  ></redoc>
+
+  <script src="https://cdn.redoc.ly/redoc/latest/bundles/redoc.standalone.js"></script>
+</body>
+</html>
