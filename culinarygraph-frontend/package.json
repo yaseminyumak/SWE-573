@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@tanstack/react-query": "^5.90.21",
+    "@testing-library/dom": "^10.4.1",
     "keycloak-js": "^26.2.3",
     "prop-types": "^15.8.1",
     "react": "^19.2.0",

@@ -33,7 +33,7 @@ class RecipeServiceTest {
     private Recipe sampleRecipe(PublishStatus status) {
         return Recipe.fromPersistence(
                 UUID.randomUUID(), "Pasta", "desc", DifficultyLevel.EASY,
-                30, status, "chef-1",
+                30, status, "local-dev-user",
                 Instant.now(), Instant.now(),
                 List.of(), List.of(), "Italy", List.of("quick"), null, Set.of()
         );

@@ -35,7 +35,7 @@ class IngredientServiceTest {
                 UUID.randomUUID(), "Saffron", "A spice", "Middle East",
                 Set.of(Season.SPRING), List.of("turmeric"),
                 "story", "Iran", Set.of(),
-                status, "user-1", Instant.now(), Instant.now()
+                status, "local-dev-user", Instant.now(), Instant.now()
         );
     }
 

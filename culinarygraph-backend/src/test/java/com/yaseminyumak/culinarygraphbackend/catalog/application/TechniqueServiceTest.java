@@ -35,7 +35,7 @@ class TechniqueServiceTest {
                 UUID.randomUUID(), "Blanching", "Briefly boil", "Europe",
                 DifficultyLevel.EASY, List.of(), Set.of(),
                 "France", "notes", "prereqs", Set.of(),
-                status, "chef-1", Instant.now(), Instant.now()
+                status, "local-dev-user", Instant.now(), Instant.now()
         );
     }
 
