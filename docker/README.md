@@ -1,132 +1,429 @@
-# CulinaryGraph — Podman / Docker Compose (tam yığın)
+# CulinaryGraph — Deployment Guide
 
-PostgreSQL (uygulama + Keycloak DB), **Keycloak**, **Spring Boot backend** ve **React (Nginx) frontend** tek komutla ayağa kalkar.
+Full stack: **PostgreSQL** (app + Keycloak DB) · **Keycloak 24** · **Spring Boot backend** · **React/Nginx frontend**
 
-## Gereksinimler
+---
 
-- **Podman** 4.x (veya Docker) ve **`podman compose`**  
-  Kurulum: [Podman](https://podman.io/getting-started/installation)
+## Table of Contents
 
-## Tam yığını başlatma
+- [CulinaryGraph — Deployment Guide](#culinarygraph--deployment-guide)
+  - [Table of Contents](#table-of-contents)
+  - [1. System Requirements](#1-system-requirements)
+  - [2. Prerequisites](#2-prerequisites)
+    - [Docker (production)](#docker-production)
+    - [Podman (local development alternative)](#podman-local-development-alternative)
+    - [Other dependencies](#other-dependencies)
+  - [3. Production Deployment](#3-production-deployment)
+    - [3.1 Server Setup](#31-server-setup)
+    - [3.2 Clone \& Configure](#32-clone--configure)
+    - [3.3 Build \& Start](#33-build--start)
+    - [3.4 Nginx Reverse Proxy + HTTPS](#34-nginx-reverse-proxy--https)
+    - [3.5 Keycloak Configuration](#35-keycloak-configuration)
+      - [Register your domain as a valid redirect URI](#register-your-domain-as-a-valid-redirect-uri)
+      - [Enable user registration](#enable-user-registration)
+      - [Custom login theme](#custom-login-theme)
+  - [6. Database Maintenance](#6-database-maintenance)
+  - [7. Environment Variables Reference](#7-environment-variables-reference)
+  - [8. Service Ports](#8-service-ports)
+  - [9. Quick Reference](#9-quick-reference)
 
-Reponun kökünden:
+---
 
-```bash
-cd docker
-podman compose up --build -d
-```
+## 1. System Requirements
 
-İlk çalıştırmada imaj build’leri (Maven + npm) birkaç dakika sürebilir.
+| Resource | Minimum | Recommended |
+|----------|---------|-------------|
+| OS | Ubuntu 22.04 LTS / Debian 12 | Ubuntu 24.04 LTS |
+| CPU | 2 cores | 4 cores |
+| RAM | 4 GB | 8 GB |
+| Disk | 20 GB | 40 GB |
+| Open ports | 22, 80, 443 | same |
 
-### Portlar
+> Keycloak alone requires ~512 MB heap. With all services running, plan for at least 2.5 GB active memory.
 
-| Servis    | Adres |
-|-----------|--------|
-| **Frontend** | http://localhost:5173 |
-| **Backend API** | http://localhost:8080 |
-| **Keycloak** | http://localhost:8180 (admin: `admin` / `admin`) |
-| **PostgreSQL** | `localhost:5432` (kullanıcı/şifre: `culinarygraph`) |
+---
 
-Frontend, tarayıcıdan `/api` isteklerini Nginx ile **backend** konteynerine yönlendirir. Keycloak adresi tarayıcı için **`http://localhost:8180`** kalır (`VITE_KEYCLOAK_URL` build arg).
+## 2. Prerequisites
 
-Backend **`docker`** Spring profili ile çalışır: veritabanı `postgres` servis adıyla, JWT doğrulama Keycloak iç ağı (`keycloak:8080` JWKS) üzerinden.
-
-### Keycloak: “HTTPS required” (HTTP + halka açık IP / Droplet)
-
-`master` realm varsayılanı `sslRequired=EXTERNAL`: tarayıcıdan `http://DROPLET_IP:8180` giden istekler “dış” sayılır ve HTTP reddedilir. `start-dev` tek başına bunu kaldırmaz. Bu yüzden `keycloak-http-bootstrap.sh` konteyner içinden `kcadm` ile `master` (ve import edilen `culinarygraph`) için `sslRequired=NONE` ayarlar. **Yalnızca geliştirme / ders ortamı** içindir; gerçek üretimde domain + TLS kullanın.
-
-### HTTP + ham IP: “Web Crypto API is not available”
-
-Tarayıcıda yalnızca **HTTPS** veya **`http://localhost` / `127.0.0.1`** “secure context” sayılır; `http://DROPLET_IP:5173` değil. **keycloak-js** hem PKCE (`crypto.subtle`) hem OAuth **state** için **`crypto.randomUUID`** kullanır; ikisi de güvensiz bağlamda eksik olabilir. Uygulama: güvenli bağlam değilse **PKCE kapatılır** (`pkceMethod: false`) ve **`randomUUID` için `getRandomValues` tabanlı polyfill** yüklenir (yalnızca geliştirme/Droplet kolaylığı; üretimde **HTTPS** hedefleyin). Keycloak token adımında PKCE hatası alırsanız: **Clients → `culinarygraph-app` → Advanced** içinde PKCE’yi isteğe bağlı yapın.
-
-### Keycloak login/register: CulinaryGraph custom theme
-
-Login, register, forgot-password ve info/error sayfaları **özel `culinarygraph` temasıyla** gelir (parent: Keycloak'un kendi `keycloak` teması; sadece CSS + logo + arka plan görseli override edilir). Sayfa düzeni: tüm sayfa **mezze sofrası fotoğrafıyla** kaplı (`fixed`, `cover`); üstüne yumuşak navy/mor overlay, ortada **logo + beyaz form kartı** (pill inputlar + mor-pembe gradient pill CTA). Tema dosyaları:
-
-```
-docker/keycloak/themes/culinarygraph/login/
-├── theme.properties
-└── resources/
-    ├── css/styles.css
-    └── img/
-        ├── logo.svg                 # form üstündeki yatay wordmark
-        └── mezze-table.jpg          # tüm sayfayı kaplayan arka plan görseli
-```
-
-`docker-compose.yml` bu klasörü konteynere `/opt/keycloak/themes/culinarygraph` olarak read-only mount eder. Realm `loginTheme: "culinarygraph"` değerini hem `culinarygraph-realm.json`'dan **ilk import'ta** hem de `keycloak-http-bootstrap.sh` içinden **her açılışta** alır (yani mevcut bir DB'de bile uygulanır).
-
-**Tema değişikliklerini uygula (canlı stack):**
+### Docker (production)
 
 ```bash
-cd docker
-podman compose restart keycloak       # tema dosyaları read-only mount, restart yeter
+# Ubuntu / Debian
+curl -fsSL https://get.docker.com | sh
+sudo usermod -aG docker $USER   # log out and back in after this
+
+# Verify
+docker compose version          # must be v2.x (plugin, not standalone)
 ```
 
-Tarayıcıda CSS hâlâ eski görünüyorsa Keycloak'un teması sıkça cache'ler:
-
-- Admin → realm **culinarygraph** → **Realm settings** → **Themes** → **Save** (tema değerini değiştirmeden kaydetmek cache'i temizler), veya
-- Hard refresh (Cmd/Ctrl+Shift+R).
-
-**Tasarımı değiştir:** Renkleri değiştirmek için `resources/css/styles.css` üst kısmındaki `:root { --cg-* }` değişkenlerini güncelle. Logo: `resources/img/logo.svg`. Arka plan fotoğrafı: `resources/img/mezze-table.jpg` (overlay yoğunluğu CSS'te `body.login-pf` içindeki `linear-gradient(... rgba(23,20,51,0.72) ...)` değerleriyle ayarlanır). Başlık altındaki slogan `#kc-page-title::after` ile CSS üzerinden enjekte edilir.
-
-### Keycloak: `Invalid parameter: redirect_uri` (400)
-
-Tarayıcıdaki uygulama adresi (ör. `http://DROPLET_IP:5173/`) **client’ın “Valid redirect URIs”** listesinde yoksa Keycloak isteği reddeder. `culinarygraph-realm.json` içinde örnek Droplet satırları vardır; **yalnızca ilk import’ta** (boş Keycloak DB) uygulanır.
-
-**Zaten çalışan bir sunucuda** (volume dolu) iki seçenek:
-
-1. **Admin konsolu:** `culinarygraph` realm → **Clients** → **culinarygraph-app** → **Access settings** → **Valid redirect URIs** ve **Web origins** içine ekle:  
-   `http://SENIN_IP:5173/*` (ve gerekirse sondaki `/` olmadan aynı kök). **Save**.
-2. Veya realm’i JSON’dan yeniden almak için Keycloak veritabanını sıfırlayıp stack’i kaldırıp açmak (`compose down -v` — **tüm kullanıcı/oturum silinir**).
-
-Farklı bir IP kullanıyorsan `docker/keycloak/culinarygraph-realm.json` içindeki örnek IP’yi kendi adresinle değiştirip yalnızca **yeni** kurulumlarda import ettir veya yine Admin’den elle ekle.
-
-## Durdurma ve temizlik
+### Podman (local development alternative)
 
 ```bash
-cd docker
-podman compose down
+sudo apt-get install -y podman podman-compose
+# On macOS: brew install podman podman-compose
 ```
 
-Volume’larla birlikte sıfırlamak (Keycloak DB dahil, realm JSON’dan yeniden import):
+> All commands in this guide use `docker compose`. Replace with `podman compose` for local development if preferred.
+
+### Other dependencies
 
 ```bash
-podman compose down -v
+sudo apt-get install -y git python3 nginx certbot python3-certbot-nginx
 ```
 
-## Sadece altyapı (Postgres + Keycloak)
+---
 
-Backend/frontend’i yerelde çalıştırmak istersen `docker-compose.yml` içinde `backend` ve `frontend` servislerini geçici olarak yorum satırına alıp yalnızca `postgres`, `postgres-kc`, `keycloak` bırakabilirsin; veya ayrı bir override dosyası kullanabilirsin.
+## 3. Production Deployment
 
-## İlk kullanım (Keycloak)
-
-1. Keycloak’ın hazır olması için ~1–2 dakika bekleyin (`podman compose ps`).
-2. Realm **culinarygraph**, client **culinarygraph-app**; roller: `culinarygraph-contributor`, `culinarygraph-validator`.
-3. Kayıt kapalıysa: Admin → realm **culinarygraph** → **Realm settings** → **Login** → **User registration** ON.
-
-## Keycloak "waiting" / compose takılıyor
-
-Resmi Keycloak imajında genelde **`wget` / `curl` yok**; healthcheck bu yüzden hep başarısız olur ve `depends_on: service_healthy` ile **backend sonsuza kadar bekler**.
-
-**Çözüm:** `docker-compose.yml` içinde Keycloak için **healthcheck kaldırıldı**; backend yalnızca Keycloak konteynerinin **başlamasını** bekler (`service_started`). Keycloak’ın realm import + hazır olması **1–3 dakika** sürebilir; bu sürede 8080’e istek atmadan önce loglara bakın:
+### 3.1 Server Setup
 
 ```bash
-podman compose logs -f keycloak
+sudo apt-get update && sudo apt-get upgrade -y
+sudo apt-get install -y git python3 nginx certbot python3-certbot-nginx
+curl -fsSL https://get.docker.com | sh
+sudo usermod -aG docker $USER
+# Log out and back in, then verify:
+docker compose version
 ```
 
-`Listening on` veya hatasız akış görünce http://localhost:8180 açılır.
+### 3.2 Clone & Configure
 
-## Build: Maven `PKIX path building failed` (HTTPS / repo.maven.apache.org)
+```bash
+git clone https://github.com/yaseminyumak/SWE-573.git
+cd SWE-573/docker
+```
 
-Konteyner içinde JDK, Maven Central sertifikasını doğrulayamıyorsa (kurumsal ağ SSL incelemesi, eksik CA):
+**Edit `docker-compose.yml` before the first boot:**
 
-1. Güncel `Dockerfile` CA paketini günceller ve `MAVEN_OPTS` ile Maven SSL/transport bayraklarını kullanır — `podman compose build --no-cache backend` deneyin.
-2. Hâlâ olursa: kurumsal kök sertifikayı imajda `keytool` ile truststore’a ekleyin veya güvenli olmayan ağ dışında build alın.
+```yaml
+frontend:
+  build:
+    args:
+      VITE_KEYCLOAK_URL: https://culinary.page   # ← your domain, no trailing slash
+      VITE_API_BASE: /api
+```
 
-## Podman: "docker-credential-desktop" hatası
+> `VITE_KEYCLOAK_URL` is compiled into the frontend JS bundle. If your domain changes, rebuild the frontend image.
 
-`~/.docker/config.json` içinde `"credsStore": "desktop"` varsa kaldırın veya boşaltın; ardından `podman compose up --build -d` tekrar deneyin.
+**Change default passwords** (required for production):
 
-## SELinux (Fedora/RHEL)
+```yaml
+postgres:
+  environment:
+    POSTGRES_PASSWORD: <strong-db-password>
 
-Volume izin sorunu olursa Keycloak import satırına `:Z` ekleyebilirsin; macOS’ta kullanma.
+postgres-kc:
+  environment:
+    POSTGRES_PASSWORD: <strong-kc-db-password>
+
+keycloak:
+  environment:
+    KEYCLOAK_ADMIN_PASSWORD: <strong-admin-password>
+    KC_DB_PASSWORD: <same-as-kc-db-password>
+
+backend:
+  environment:
+    DB_PASSWORD: <same-as-db-password>
+```
+
+### 3.3 Build & Start
+
+```bash
+cd SWE-573/docker
+
+docker compose build
+docker compose up -d
+
+# Watch until Keycloak is ready (~2 min)
+docker compose logs -f keycloak
+# Wait for: "Listening on: http://0.0.0.0:8080"
+
+# Verify backend is up
+docker compose logs -f backend
+# Wait for: "Started CulinaryGraphBackendApplication in X seconds"
+```
+
+### 3.4 Nginx Reverse Proxy + HTTPS
+
+In production, the host nginx terminates HTTPS and proxies traffic to the containers. **Keycloak is not exposed externally** — nginx proxies its OIDC endpoints internally from `localhost:8180`.
+
+**Architecture:**
+
+```
+Browser
+  │
+  ├─ HTTPS :443 ──► host nginx
+  │                    ├─ /realms/, /resources/, /js/  ──► localhost:8180 (Keycloak)
+  │                    └─ everything else               ──► localhost:8081 (frontend)
+  │
+  └─ (backend API called via /api/ through the frontend nginx inside the container)
+```
+
+**Create the nginx site config:**
+
+```bash
+sudo nano /etc/nginx/sites-available/culinarygraph
+```
+
+```nginx
+# ── HTTP: redirect all to HTTPS ──────────────────────────────────────────────
+server {
+    listen 80;
+    server_name culinary.page www.culinary.page;
+    return 301 https://culinary.page$request_uri;
+}
+
+# ── HTTPS www → bare domain ──────────────────────────────────────────────────
+server {
+    listen 443 ssl;
+    server_name www.culinary.page;
+
+    ssl_certificate     /etc/letsencrypt/live/culinary.page/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/culinary.page/privkey.pem;
+    include             /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam         /etc/letsencrypt/ssl-dhparams.pem;
+
+    return 301 https://culinary.page$request_uri;
+}
+
+# ── Main application ──────────────────────────────────────────────────────────
+server {
+    listen 443 ssl;
+    server_name culinary.page;
+
+    ssl_certificate     /etc/letsencrypt/live/culinary.page/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/culinary.page/privkey.pem;
+    include             /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam         /etc/letsencrypt/ssl-dhparams.pem;
+
+    client_max_body_size 30m;
+
+    # Keycloak — OIDC endpoints proxied internally (port not exposed publicly)
+    location ~ ^/(realms|resources|js)/ {
+        proxy_pass         http://127.0.0.1:8180;
+        proxy_http_version 1.1;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_buffer_size  128k;
+        proxy_buffers      8 128k;
+    }
+
+    # Frontend (React SPA + backend API proxy)
+    location / {
+        proxy_pass         http://127.0.0.1:8081;
+        proxy_http_version 1.1;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+    }
+}
+```
+
+**Enable the site and obtain the TLS certificate:**
+
+```bash
+sudo ln -s /etc/nginx/sites-available/culinarygraph /etc/nginx/sites-enabled/
+sudo nginx -t   # must say "syntax is ok"
+
+# Obtain Let's Encrypt certificate (nginx plugin handles everything)
+sudo certbot --nginx -d culinary.page -d www.culinary.page
+
+# Test auto-renewal
+sudo certbot renew --dry-run
+
+sudo systemctl reload nginx
+```
+
+**Firewall:**
+
+```bash
+sudo ufw allow 22
+sudo ufw allow 80
+sudo ufw allow 443
+sudo ufw enable
+sudo ufw status
+```
+
+> Port 8180 (Keycloak) and 8080 (backend) are **not** opened — they are internal only.
+
+### 3.5 Keycloak Configuration
+
+#### Register your domain as a valid redirect URI
+
+Keycloak's browser-facing OIDC flow requires the `redirect_uri` sent by the frontend to be pre-registered in the client settings. Run this once from the **server terminal** after the stack is up — no Keycloak restart needed:
+
+```bash
+#!/usr/bin/env bash
+set -euo pipefail
+
+KC="http://localhost:8180"
+REALM="culinarygraph"
+CLIENT_ID="culinarygraph-app"
+ADMIN_USER="admin"
+ADMIN_PASS="admin"   # change if you updated the password
+
+TOKEN=$(curl -sf -X POST "${KC}/realms/master/protocol/openid-connect/token" \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "grant_type=password&client_id=admin-cli&username=${ADMIN_USER}&password=${ADMIN_PASS}" \
+  | python3 -c "import sys,json; print(json.load(sys.stdin)['access_token'])")
+
+CLIENT_UUID=$(curl -sf "${KC}/admin/realms/${REALM}/clients?clientId=${CLIENT_ID}" \
+  -H "Authorization: Bearer ${TOKEN}" \
+  | python3 -c "import sys,json; print(json.load(sys.stdin)[0]['id'])")
+
+curl -sf "${KC}/admin/realms/${REALM}/clients/${CLIENT_UUID}" \
+  -H "Authorization: Bearer ${TOKEN}" \
+  | python3 -c "
+import sys, json
+client = json.load(sys.stdin)
+new_uris = [
+    'https://culinary.page', 'https://culinary.page/', 'https://culinary.page/*',
+    'https://www.culinary.page', 'https://www.culinary.page/', 'https://www.culinary.page/*',
+]
+new_origins = ['https://culinary.page', 'https://www.culinary.page']
+uris = set(client.get('redirectUris', [])); uris.update(new_uris)
+client['redirectUris'] = sorted(uris)
+origins = set(client.get('webOrigins', [])); origins.update(new_origins)
+client['webOrigins'] = sorted(origins)
+print(json.dumps(client))
+" > /tmp/kc_patch.json
+
+HTTP=$(curl -s -o /dev/null -w "%{http_code}" -X PUT \
+  "${KC}/admin/realms/${REALM}/clients/${CLIENT_UUID}" \
+  -H "Authorization: Bearer ${TOKEN}" \
+  -H "Content-Type: application/json" \
+  -d @/tmp/kc_patch.json)
+rm -f /tmp/kc_patch.json
+
+[ "$HTTP" = "204" ] \
+  && echo "✓ Done. Keycloak updated — redirect URIs registered." \
+  || { echo "✗ Failed (HTTP ${HTTP})"; exit 1; }
+```
+
+> Access the Keycloak admin console at `https://culinary.page/admin` (proxied through nginx) or directly from the server via `http://localhost:8180/admin`.
+
+#### Enable user registration
+
+```bash
+# Via API (replace token from the script above)
+curl -sf -X PUT "http://localhost:8180/admin/realms/culinarygraph" \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"registrationAllowed": true}'
+```
+
+Or: Admin console → realm **culinarygraph** → **Realm settings** → **Login** → **User registration** ON → Save.
+
+#### Custom login theme
+
+Login, register, and error pages use the built-in `culinarygraph` theme (dark navy background, logo, branded form). Theme files are mounted read-only into the Keycloak container from `docker/keycloak/themes/culinarygraph/`.
+
+To apply theme changes without restarting the whole stack:
+
+```bash
+docker compose restart keycloak
+```
+
+If CSS is cached in the browser: Admin console → realm **culinarygraph** → **Realm settings** → **Themes** → click **Save** (forces a cache bust), then hard refresh (`Ctrl+Shift+R`).
+
+---
+
+## 6. Database Maintenance
+
+**Access the database shell:**
+
+```bash
+docker exec -it docker-postgres-1 psql -U culinarygraph -d culinarygraph
+```
+
+**Run pending Liquibase migrations** (happens automatically on backend startup):
+
+```bash
+docker compose build backend
+docker compose up -d --force-recreate backend
+
+# Watch migration output
+docker compose logs -f backend | grep -i "liquibase\|changeset\|running"
+```
+
+**Backup:**
+
+```bash
+docker exec docker-postgres-1 pg_dump -U culinarygraph culinarygraph \
+  > backup_$(date +%Y%m%d_%H%M).sql
+```
+
+**Restore:**
+
+```bash
+cat backup_YYYYMMDD_HHMM.sql \
+  | docker exec -i docker-postgres-1 psql -U culinarygraph -d culinarygraph
+```
+
+---
+
+## 7. Environment Variables Reference
+
+| Variable | Service | Default | Notes |
+|----------|---------|---------|-------|
+| `SPRING_PROFILES_ACTIVE` | backend | `docker` | Activates docker datasource profile |
+| `DB_HOST` | backend | `postgres` | PostgreSQL service name |
+| `DB_PORT` | backend | `5432` | |
+| `DB_NAME` | backend | `culinarygraph` | |
+| `DB_USERNAME` | backend | `culinarygraph` | |
+| `DB_PASSWORD` | backend | `culinarygraph` | **Change in production** |
+| `KEYCLOAK_ISSUER_URI` | backend | `http://keycloak:8080/realms/culinarygraph` | Internal service-to-service URI |
+| `KEYCLOAK_ADMIN` | keycloak | `admin` | |
+| `KEYCLOAK_ADMIN_PASSWORD` | keycloak | `admin` | **Change in production** |
+| `KC_DB_PASSWORD` | keycloak | `keycloak` | **Change in production** |
+| `VITE_KEYCLOAK_URL` | frontend build arg | `http://localhost:8180` | Browser-facing Keycloak URL — set to your domain |
+| `VITE_API_BASE` | frontend build arg | `/api` | API base path |
+
+---
+
+## 8. Service Ports
+
+| Service | Internal port | Host binding | Exposed publicly |
+|---------|-------------|-------------|-----------------|
+| Frontend (nginx) | 80 | 8081 | Via host nginx → 443 |
+| Backend (Spring Boot) | 8080 | 8080 | No — internal only |
+| Keycloak | 8080 | 8180 | No — proxied through nginx |
+| PostgreSQL (app) | 5432 | 5432 | No — internal only |
+| PostgreSQL (Keycloak) | 5432 | not bound | No — internal only |
+
+---
+
+## 9. Quick Reference
+
+```bash
+# Start everything
+cd SWE-573/docker && docker compose up -d
+
+# Stop (data preserved)
+docker compose down
+
+# Full reset — deletes all data and Keycloak users
+docker compose down -v
+
+# Rebuild a single service
+docker compose build backend
+docker compose up -d --force-recreate backend
+
+# View logs
+docker compose logs -f backend
+docker compose logs -f keycloak
+docker compose logs -f frontend
+
+# Database shell
+docker exec -it docker-postgres-1 psql -U culinarygraph -d culinarygraph
+
+# Rebuild frontend with production domain
+docker compose build \
+  --build-arg VITE_KEYCLOAK_URL=https://culinary.page \
+  --build-arg VITE_API_BASE=/api \
+  frontend
+docker compose up -d --force-recreate frontend
+```
