@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { fetchTechnique, deleteTechnique } from './catalogApi'
-import ImageManager from '../../shared/components/ImageManager'
+import EntityCardImage from '../../shared/components/EntityCardImage'
 import ConfirmModal from '../../shared/components/ConfirmModal'
 import { useCatalogIndex } from '../../shared/hooks/useCatalogIndex'
 import { useAuth } from '../../auth/AuthProvider'
@@ -47,7 +47,7 @@ export default function TechniqueDetailPage() {
     <div className="max-w-3xl mx-auto px-6 py-8">
 
       {/* Image gallery */}
-      <ImageManager entityType="TECHNIQUE" entityId={technique.id} canEdit={canEdit} />
+      <EntityCardImage entityType="TECHNIQUE" entityId={technique.id} />
 
       {/* Title + meta */}
       <div className="mt-6 mb-2">

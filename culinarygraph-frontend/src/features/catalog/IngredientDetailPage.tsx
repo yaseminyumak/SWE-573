@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { fetchIngredient, fetchTechniques, deleteIngredient } from './catalogApi'
-import ImageManager from '../../shared/components/ImageManager'
+import EntityCardImage from '../../shared/components/EntityCardImage'
 import ConfirmModal from '../../shared/components/ConfirmModal'
 import { useCatalogIndex } from '../../shared/hooks/useCatalogIndex'
 import { useAuth } from '../../auth/AuthProvider'
@@ -57,8 +57,8 @@ export default function IngredientDetailPage() {
     )}
     <div className="max-w-3xl mx-auto px-6 py-8">
 
-      {/* Image gallery */}
-      <ImageManager entityType="INGREDIENT" entityId={ingredient.id} canEdit={canEdit} />
+      {/* Cover image */}
+      <EntityCardImage entityType="INGREDIENT" entityId={ingredient.id} />
 
       {/* Title + meta */}
       <div className="mt-6 mb-6">

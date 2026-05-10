@@ -5,6 +5,8 @@ import { createTechnique, updateTechnique, fetchTechnique, fetchIngredients } fr
 import type { CreateTechniqueRequest, DifficultyLevel } from './catalogApi'
 import RelationPicker from '../../shared/components/RelationPicker'
 import ImageManager from '../../shared/components/ImageManager'
+import CoverPhotoPicker from '../../shared/components/CoverPhotoPicker'
+import { uploadImage } from '../../shared/api/imageApi'
 import { useAuth } from '../../auth/AuthProvider'
 import { COUNTRIES } from '../../shared/constants/countries'
 
@@ -25,6 +27,7 @@ export default function TechniqueFormPage() {
   const [prerequisites, setPrerequisites] = useState('')
   const [steps, setSteps] = useState<string[]>([''])
   const [selectedIngredientNames, setSelectedIngredientNames] = useState<string[]>([])
+  const [coverFile, setCoverFile] = useState<File | null>(null)
 
   const { data: ingredients = [] } = useQuery({ queryKey: ['catalog', 'ingredients'], queryFn: fetchIngredients })
   const { data: existing } = useQuery({
@@ -54,9 +57,12 @@ export default function TechniqueFormPage() {
   const mutation = useMutation({
     mutationFn: (body: CreateTechniqueRequest) =>
       isEdit ? updateTechnique(id!, body) : createTechnique(body),
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
+      if (!isEdit && coverFile) {
+        await uploadImage('TECHNIQUE', data.id, coverFile).catch(() => {})
+      }
       queryClient.invalidateQueries({ queryKey: ['catalog', 'techniques'] })
-      navigate(isEdit ? `/catalog/techniques/${data.id}` : '/catalog/techniques')
+      navigate(`/catalog/techniques/${data.id}`)
     },
   })
 
@@ -89,12 +95,15 @@ export default function TechniqueFormPage() {
 
       {isEdit && existing?.createdBy === keycloak?.tokenParsed?.preferred_username && (
         <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Photos</label>
           <ImageManager entityType="TECHNIQUE" entityId={id!} canEdit={true} />
         </div>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        {!isEdit && (
+          <CoverPhotoPicker onChange={(f) => setCoverFile(f)} />
+        )}
+
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
           <input type="text" value={name} onChange={(e) => setName(e.target.value)} required

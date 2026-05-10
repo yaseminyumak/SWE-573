@@ -6,6 +6,8 @@ import type { CreateRecipeRequest, DifficultyLevel } from './recipeApi'
 import { fetchIngredients, fetchTechniques } from '../catalog/catalogApi'
 import RelationPicker from '../../shared/components/RelationPicker'
 import ImageManager from '../../shared/components/ImageManager'
+import CoverPhotoPicker from '../../shared/components/CoverPhotoPicker'
+import { uploadImage } from '../../shared/api/imageApi'
 import { useAuth } from '../../auth/AuthProvider'
 import { COUNTRIES } from '../../shared/constants/countries'
 
@@ -28,6 +30,7 @@ export default function RecipeFormPage() {
   const [steps, setSteps] = useState<string[]>([''])
   const [tags, setTags] = useState('')
   const [originStory, setOriginStory] = useState('')
+  const [coverFile, setCoverFile] = useState<File | null>(null)
 
   const { data: catalogIngredients = [] } = useQuery({ queryKey: ['catalog', 'ingredients'], queryFn: fetchIngredients })
   const { data: techniques = [] } = useQuery({ queryKey: ['catalog', 'techniques'], queryFn: fetchTechniques })
@@ -61,9 +64,12 @@ export default function RecipeFormPage() {
   const mutation = useMutation({
     mutationFn: (body: CreateRecipeRequest) =>
       isEdit ? updateRecipe(id!, body) : createRecipe(body),
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
+      if (!isEdit && coverFile) {
+        await uploadImage('RECIPE', data.id, coverFile).catch(() => {})
+      }
       queryClient.invalidateQueries({ queryKey: ['recipes'] })
-      navigate(isEdit ? `/recipes/${data.id}` : '/recipes')
+      navigate(`/recipes/${data.id}`)
     },
   })
 
@@ -110,12 +116,15 @@ export default function RecipeFormPage() {
 
       {isEdit && existing?.createdBy === keycloak?.tokenParsed?.preferred_username && (
         <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-2">Photos</label>
           <ImageManager entityType="RECIPE" entityId={id!} canEdit={true} />
         </div>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        {!isEdit && (
+          <CoverPhotoPicker onChange={(f) => setCoverFile(f)} />
+        )}
+
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Title *</label>
           <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} required

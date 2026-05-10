@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { fetchRecipe, deleteRecipe } from './recipeApi'
 import { useCatalogIndex } from '../../shared/hooks/useCatalogIndex'
-import ImageManager from '../../shared/components/ImageManager'
+import EntityCardImage from '../../shared/components/EntityCardImage'
 import ConfirmModal from '../../shared/components/ConfirmModal'
 import { useAuth } from '../../auth/AuthProvider'
 import LikeButton from '../social/LikeButton'
@@ -45,8 +45,8 @@ export default function RecipeDetailPage() {
     )}
     <div className="max-w-3xl mx-auto px-6 py-8">
 
-      {/* Image gallery */}
-      <ImageManager entityType="RECIPE" entityId={recipe.id} canEdit={canEdit} />
+      {/* Cover image */}
+      <EntityCardImage entityType="RECIPE" entityId={recipe.id} />
 
       {/* Title + meta */}
       <div className="mt-6 mb-6">
