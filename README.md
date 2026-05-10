@@ -3,6 +3,7 @@
 A crowdsourced platform for documenting and sharing region-specific cooking techniques, ingredient stories, and traditional preparation methods.
 
 Unlike recipe websites that focus on complete dishes, CulinaryGraph captures the foundational knowledge that underlies cooking traditions: the techniques, the ingredients, and the cultural context that makes them meaningful.
+*AI-assisted work is disclosed in [AI_USAGE.md](AI_USAGE.md) (course policy).*
 
 ---
 

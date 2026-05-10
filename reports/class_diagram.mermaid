@@ -1,147 +1,129 @@
 classDiagram
+    direction LR
 
-    %% ══════════════════════════════════════
-    %% AGGREGATE ROOT: Technique
-    %% ══════════════════════════════════════
-    class Technique {
-        -TechniqueId id
-        -String name
-        -String description
-        -RegionId region
-        -ContributorId createdBy
-        -PublishStatus status
-        -DateTime createdAt
-        +create(name, desc, region, contributor) Technique$
-        +publish() void
-        +archive() void
-        +isPublished() bool
-        +belongsToRegion(regionId) bool
+    %% CulinaryGraph — JPA persistence view
+    %% PublishStatus omitted. Technique has no self-relation in this diagram.
+
+    class RecipeEntity {
+        UUID id
+        String title
+        String description
+        DifficultyLevel difficulty
+        Integer durationMinutes
+        String createdBy
+        Instant createdAt
+        Instant updatedAt
+        String country
+        List tags
+        String originStory
+        Set associatedTechniqueIds
+        +getStepEntities()
+        +getIngredientEntities()
+        +getAssociatedTechniqueIds()
     }
 
-    class PublishStatus {
+    class RecipeStepEntity {
+        UUID id
+        int stepOrder
+        String instruction
+    }
+
+    class RecipeIngredientEntity {
+        UUID id
+        String name
+        String quantity
+        String unit
+        UUID ingredientId
+        +getIngredientId()
+    }
+
+    class TechniqueEntity {
+        UUID id
+        String name
+        String description
+        String region
+        DifficultyLevel difficulty
+        String country
+        String culturalNotes
+        String prerequisites
+        String createdBy
+        Instant createdAt
+        Instant updatedAt
+        +getStepEntities()
+        +getIngredientEntities()
+    }
+
+    class TechniqueStepEntity {
+        UUID id
+        int stepOrder
+        String instruction
+    }
+
+    class IngredientEntity {
+        UUID id
+        String name
+        String description
+        String region
+        Set seasons
+        List substitutes
+        String provenanceStory
+        String country
+        String createdBy
+        Instant createdAt
+        Instant updatedAt
+        +getRelatedTechniques()
+    }
+
+    class CommentEntity {
+        UUID id
+        String entityType
+        UUID entityId
+        String username
+        String body
+        Instant createdAt
+        +getBody()
+    }
+
+    class LikeEntity {
+        UUID id
+        String entityType
+        UUID entityId
+        String username
+        Instant createdAt
+    }
+
+    class DifficultyLevel {
         <<enumeration>>
-        DRAFT
-        PUBLISHED
-        ARCHIVED
+        EASY
+        MEDIUM
+        HARD
     }
 
-    %% ══════════════════════════════════════
-    %% AGGREGATE ROOT: Ingredient
-    %% ══════════════════════════════════════
-    class Ingredient {
-        -IngredientId id
-        -String name
-        -String description
-        -RegionId region
-        -Seasonality seasonality
-        -ContributorId createdBy
-        -PublishStatus status
-        -DateTime createdAt
-        +create(name, desc, region, seasonality, contributor) Ingredient$
-        +publish() void
-        +archive() void
-        +isAvailableIn(month) bool
-        +isPublished() bool
-        +belongsToRegion(regionId) bool
-    }
-
-    class Seasonality {
-        -Month startMonth
-        -Month endMonth
-        +includes(month) bool
-        +describe() String
-    }
-
-    %% ══════════════════════════════════════
-    %% AGGREGATE ROOT: Recipe
-    %% ══════════════════════════════════════
-    class Recipe {
-        -RecipeId id
-        -String name
-        -String description
-        -RegionId region
-        -ContributorId createdBy
-        -PublishStatus status
-        -DateTime createdAt
-        +create(name, desc, region, contributor) Recipe$
-        +publish() void
-        +archive() void
-        +isPublished() bool
-        +belongsToRegion(regionId) bool
-    }
-
-    %% ══════════════════════════════════════
-    %% AGGREGATE ROOT: User
-    %% ══════════════════════════════════════
-    class User {
-        -UserId id
-        -String username
-        -Email email
-        -UserRole role
-        -DateTime joinedAt
-        +register(username, email) User$
-        +promoteToValidator() void
-        +canContribute() bool
-        +canValidate() bool
-        +isValidator() bool
-    }
-
-    class UserRole {
+    class Season {
         <<enumeration>>
-        CONTRIBUTOR
-        VALIDATOR
+        SPRING
+        SUMMER
+        AUTUMN
+        WINTER
     }
 
-    class Email {
-        -String value
-        +isValid() bool
-    }
+    RecipeEntity "1" *-- "0..*" RecipeStepEntity : steps
+    RecipeEntity "1" *-- "0..*" RecipeIngredientEntity : ingredientLines
+    RecipeEntity ..> TechniqueEntity : associatedTechniqueIds
 
-    %% ══════════════════════════════════════
-    %% VALUE OBJECT: Region
-    %% ══════════════════════════════════════
-    class Region {
-        -RegionId id
-        -String name
-        -String country
-        +displayName() String
-        +isSameCountry(other) bool
-    }
+    TechniqueEntity "1" *-- "0..*" TechniqueStepEntity : steps
+    TechniqueEntity "0..*" -- "0..*" IngredientEntity : techniqueIngredients
 
-    %% ══════════════════════════════════════
-    %% DOMAIN SERVICE
-    %% ══════════════════════════════════════
-    class CatalogSearchService {
-        <<service>>
-        +findTechniquesByRegion(regionId) List~Technique~
-        +findIngredientsByRegion(regionId) List~Ingredient~
-        +findIngredientsByMonth(regionId, month) List~Ingredient~
-        +findRecipesByRegion(regionId) List~Recipe~
-        +searchAll(keyword, regionId) SearchResult
-    }
+    RecipeIngredientEntity ..> IngredientEntity : optional ingredientId
 
-    %% ══════════════════════════════════════
-    %% RELATIONSHIPS
-    %% ══════════════════════════════════════
-    Technique --> PublishStatus
-    Technique --> Region : originates from
-    Technique --> User : created by
+    CommentEntity ..> RecipeEntity : RECIPE
+    CommentEntity ..> TechniqueEntity : TECHNIQUE
+    CommentEntity ..> IngredientEntity : INGREDIENT
 
-    Ingredient --> PublishStatus
-    Ingredient *-- Seasonality
-    Ingredient --> Region : native to
-    Ingredient --> User : created by
+    LikeEntity ..> RecipeEntity : RECIPE
+    LikeEntity ..> TechniqueEntity : TECHNIQUE
+    LikeEntity ..> IngredientEntity : INGREDIENT
 
-    Recipe --> PublishStatus
-    Recipe --> Region : "from region"
-    Recipe --> User : created by
-    Recipe --> Technique : uses
-    Recipe --> Ingredient : uses
-
-    User --> UserRole
-    User *-- Email
-
-    CatalogSearchService ..> Technique : queries
-    CatalogSearchService ..> Ingredient : queries
-    CatalogSearchService ..> Recipe : queries
-    CatalogSearchService ..> Region : filters by
+    RecipeEntity --> DifficultyLevel
+    TechniqueEntity --> DifficultyLevel
+    IngredientEntity --> Season

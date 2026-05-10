@@ -17,10 +17,12 @@ This guide explains how to use the **CulinaryGraph** web application in clear, b
 
 ### 1.3 Supported user roles
 
-| Role | What you can do |
-|------|------------------|
-| **Guest** (not signed in) | Browse the **Home** page, open **Techniques**, **Ingredients**, and **Recipes** lists and detail pages, use **search** (header) and **list filters** where available. You **cannot** create or edit content. |
-| **Contributor** (signed in) | Everything a Guest can do, plus **create**, **edit**, and **delete your own** techniques, ingredients, and recipes; upload **images** on entities you own; manage your entries from **Profile**. |
+
+| Role                        | What you can do                                                                                                                                                                                              |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Guest** (not signed in)   | Browse the **Home** page, open **Techniques**, **Ingredients**, and **Recipes** lists and detail pages, use **search** (header) and **list filters** where available. You **cannot** create or edit content. |
+| **Contributor** (signed in) | Everything a Guest can do, plus **create**, **edit**, and **delete your own** techniques, ingredients, and recipes; upload **images** on entities you own; manage your entries from **Profile**.             |
+
 
 > **Note:** The application uses **Keycloak** for accounts. Advanced admin-only tools (if any) are outside this manual's scope.
 
@@ -32,7 +34,7 @@ Identity is handled by **Keycloak**. You sign in and register through the **Logi
 
 ### 2.1 Registration
 
-1. Open CulinaryGraph in your browser at **https://culinary.page/**.
+1. Open CulinaryGraph in your browser at **[https://culinary.page/](https://culinary.page/)**.
 2. Click **Login / Register** in the top bar.
 3. Choose **Register** and complete the sign-up form (for example username, email, and password, as required).
 4. After successful registration, you may be signed in automatically or asked to sign in—follow the on-screen prompts.
@@ -56,12 +58,14 @@ Identity is handled by **Keycloak**. You sign in and register through the **Logi
 
 Use the main navigation (top of every page):
 
-| Link | What you see |
-|------|----------------|
-| **Home** (`/`) | **Knowledge Map** (see §3.4), **Highlighted** and **Recently Added** content. |
-| **Techniques** (`/catalog/techniques`) | List of techniques with **filters** (see §3.3). Open an item to see its **detail** page. |
-| **Ingredients** (`/catalog/ingredients`) | List of ingredient profiles with filters. Open an item for detail. |
-| **Recipes** (`/recipes`) | List of recipes with filters. Open an item for detail. |
+
+| Link                                     | What you see                                                                             |
+| ---------------------------------------- | ---------------------------------------------------------------------------------------- |
+| **Home** (`/`)                           | **Knowledge Map** (see §3.4), **Highlighted** and **Recently Added** content.            |
+| **Techniques** (`/catalog/techniques`)   | List of techniques with **filters** (see §3.3). Open an item to see its **detail** page. |
+| **Ingredients** (`/catalog/ingredients`) | List of ingredient profiles with filters. Open an item for detail.                       |
+| **Recipes** (`/recipes`)                 | List of recipes with filters. Open an item for detail.                                   |
+
 
 ### 3.2 Homepage search
 
@@ -123,12 +127,14 @@ On the recipe **detail** page (as owner), click **Delete** and confirm **or** us
 
 ### 4.4 Ingredients, techniques, steps, and regions on a recipe
 
-| Part | How |
-|------|-----|
-| **Steps** | Add multiple step lines; they are stored in order. |
-| **Ingredients** | Add rows with **name**; optionally **quantity**, **unit**, **substitution** text. |
-| **Techniques** | Pick **associated techniques** from the catalog (links the recipe to existing techniques). |
-| **Region / country** | Use **Country** and **Region** fields so readers see geographic context. |
+
+| Part                 | How                                                                                        |
+| -------------------- | ------------------------------------------------------------------------------------------ |
+| **Steps**            | Add multiple step lines; they are stored in order.                                         |
+| **Ingredients**      | Add rows with **name**; optionally **quantity**, **unit**, **substitution** text.          |
+| **Techniques**       | Pick **associated techniques** from the catalog (links the recipe to existing techniques). |
+| **Region / country** | Use **Country** and **Region** fields so readers see geographic context.                   |
+
 
 ---
 
@@ -200,28 +206,30 @@ On **detail** pages you **own**, use the **image manager** to upload, reorder, o
 
 ## 8. Quick reference — URLs
 
-| Page | Path |
-|------|------|
-| Home | `/` |
-| Techniques list | `/catalog/techniques` |
-| New technique | `/catalog/techniques/new` |
-| Technique detail | `/catalog/techniques/:id` |
-| Edit technique | `/catalog/techniques/:id/edit` |
-| Ingredients list | `/catalog/ingredients` |
-| New ingredient | `/catalog/ingredients/new` |
-| Ingredient detail | `/catalog/ingredients/:id` |
-| Edit ingredient | `/catalog/ingredients/:id/edit` |
-| Recipes list | `/recipes` |
-| New recipe | `/recipes/new` |
-| Recipe detail | `/recipes/:id` |
-| Edit recipe | `/recipes/:id/edit` |
-| Search | `/search?q=...` |
-| Profile | `/profile` |
+
+| Page              | Path                            |
+| ----------------- | ------------------------------- |
+| Home              | `/`                             |
+| Techniques list   | `/catalog/techniques`           |
+| New technique     | `/catalog/techniques/new`       |
+| Technique detail  | `/catalog/techniques/:id`       |
+| Edit technique    | `/catalog/techniques/:id/edit`  |
+| Ingredients list  | `/catalog/ingredients`          |
+| New ingredient    | `/catalog/ingredients/new`      |
+| Ingredient detail | `/catalog/ingredients/:id`      |
+| Edit ingredient   | `/catalog/ingredients/:id/edit` |
+| Recipes list      | `/recipes`                      |
+| New recipe        | `/recipes/new`                  |
+| Recipe detail     | `/recipes/:id`                  |
+| Edit recipe       | `/recipes/:id/edit`             |
+| Search            | `/search?q=...`                 |
+| Profile           | `/profile`                      |
+
 
 ---
 
 ## 9. Getting help
 
-- **Developer / setup:** [`README.md`](../README.md), [`docker/README.md`](../docker/README.md)
-- **Formal requirements:** [`SRS.md`](SRS.md)
+- **Developer / setup:** `[README.md](../README.md)`, `[docker/README.md](../docker/README.md)`
+- **Formal requirements:** `[SRS.md](SRS.md)`
 
