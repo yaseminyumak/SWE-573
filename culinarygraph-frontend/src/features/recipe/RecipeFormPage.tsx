@@ -7,6 +7,7 @@ import { fetchIngredients, fetchTechniques } from '../catalog/catalogApi'
 import RelationPicker from '../../shared/components/RelationPicker'
 import ImageManager from '../../shared/components/ImageManager'
 import CoverPhotoPicker from '../../shared/components/CoverPhotoPicker'
+import SpecialDaysPicker from '../../shared/components/SpecialDaysPicker'
 import { uploadImage } from '../../shared/api/imageApi'
 import { useAuth } from '../../auth/AuthProvider'
 import { COUNTRIES } from '../../shared/constants/countries'
@@ -30,6 +31,7 @@ export default function RecipeFormPage() {
   const [steps, setSteps] = useState<string[]>([''])
   const [tags, setTags] = useState('')
   const [originStory, setOriginStory] = useState('')
+  const [specialDays, setSpecialDays] = useState<string[]>([])
   const [coverFile, setCoverFile] = useState<File | null>(null)
 
   const { data: catalogIngredients = [] } = useQuery({ queryKey: ['catalog', 'ingredients'], queryFn: fetchIngredients })
@@ -59,6 +61,7 @@ export default function RecipeFormPage() {
     setSteps(existing.steps.length > 0 ? existing.steps.map((s) => s.instruction) : [''])
     setTags((existing.tags ?? []).join(', '))
     setOriginStory(existing.originStory ?? '')
+    setSpecialDays(existing.specialDays ?? [])
   }, [existing])
 
   const mutation = useMutation({
@@ -106,6 +109,7 @@ export default function RecipeFormPage() {
         .filter((tid): tid is string => tid != null),
       tags: tags.split(',').map((t) => t.trim()).filter(Boolean),
       originStory: originStory.trim() || undefined,
+      specialDays,
     })
   }
 
@@ -226,6 +230,12 @@ export default function RecipeFormPage() {
             placeholder="e.g., Vegetarian, Italian, Quick"
             className="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-[#8c2d9c]" />
         </div>
+
+        <SpecialDaysPicker
+          selected={specialDays}
+          onAdd={(d) => setSpecialDays((s) => [...s, d])}
+          onRemove={(d) => setSpecialDays((s) => s.filter((x) => x !== d))}
+        />
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Origin Story</label>

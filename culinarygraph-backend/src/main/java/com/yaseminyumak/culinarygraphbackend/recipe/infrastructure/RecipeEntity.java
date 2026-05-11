@@ -67,6 +67,11 @@ public class RecipeEntity {
 	@OneToMany(mappedBy = "recipe", cascade = CascadeType.ALL, orphanRemoval = true)
 	private List<RecipeIngredientEntity> ingredientEntities = new ArrayList<>();
 
+	@ElementCollection(fetch = FetchType.LAZY)
+	@CollectionTable(name = "recipe_special_days", joinColumns = @JoinColumn(name = "recipe_id"))
+	@Column(name = "special_day", length = 100)
+	private List<String> specialDays = new ArrayList<>();
+
 	@SuppressWarnings("unused")
 	protected RecipeEntity() {
 	}
@@ -181,5 +186,13 @@ public class RecipeEntity {
 
 	public void setAssociatedTechniqueIds(Set<UUID> associatedTechniqueIds) {
 		this.associatedTechniqueIds = associatedTechniqueIds;
+	}
+
+	public List<String> getSpecialDays() {
+		return specialDays;
+	}
+
+	public void setSpecialDays(List<String> specialDays) {
+		this.specialDays = specialDays;
 	}
 }

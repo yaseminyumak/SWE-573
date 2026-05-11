@@ -150,6 +150,20 @@ export default function RecipeDetailPage() {
           </div>
         )}
 
+        {recipe.specialDays?.length > 0 && (
+          <div>
+            <h2 className="font-bold text-base text-[#171433] mb-2">Special Days</h2>
+            <div className="flex flex-wrap gap-2">
+              {recipe.specialDays.map((day, i) => (
+                <Link key={i} to={`/recipes?specialDay=${encodeURIComponent(day)}`}
+                  className="bg-[#ede8ee] border border-[#d67ec9] text-[#8c2d9c] px-3 py-0.5 rounded-full text-sm font-medium hover:bg-[#d67ec9] hover:text-white transition-colors">
+                  {day}
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
         {recipe.originStory && (
           <div>
             <h2 className="font-bold text-base text-[#171433] mb-2">Origin Story</h2>

@@ -13,4 +13,5 @@
     <include file="v1.5.0-id-based-relations.sql" relativeToChangelogFile="true"/>
     <include file="v1.6.0-social.sql" relativeToChangelogFile="true"/>
     <include file="v1.7.0-user-profiles.sql" relativeToChangelogFile="true"/>
+    <include file="v1.8.0-add-special-days.sql" relativeToChangelogFile="true"/>
 </databaseChangeLog>
