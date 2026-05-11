@@ -21,7 +21,7 @@ export default function RecipeDetailPage() {
     queryFn: () => fetchRecipe(id!),
     enabled: !!id,
   })
-  const { techniqueById } = useCatalogIndex()
+  const { techniqueById, ingredientByName } = useCatalogIndex()
   const delMutation = useMutation({
     mutationFn: () => deleteRecipe(id!),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['recipes'] }); navigate('/recipes') },
@@ -87,10 +87,18 @@ export default function RecipeDetailPage() {
                 <li key={i} className="text-sm text-gray-700 flex items-start gap-2">
                   <span className="text-[#8c2d9c] font-bold mt-0.5">·</span>
                   <span>
-                    {ing.ingredientId ? (
-                      <Link to={`/catalog/ingredients/${ing.ingredientId}`}
-                        className="text-[#8c2d9c] hover:underline font-medium">{ing.name}</Link>
-                    ) : ing.name}
+                    {(() => {
+                      const resolvedId = ing.ingredientId ?? ingredientByName.get(ing.name)
+                      return resolvedId ? (
+                        <Link to={`/catalog/ingredients/${resolvedId}`}
+                          className="text-[#8c2d9c] hover:underline font-medium">{ing.name}</Link>
+                      ) : ing.name
+                    })()}
+                    {(ing.quantity || ing.unit) && (
+                      <span className="text-gray-400 ml-1">
+                        {[ing.quantity, ing.unit].filter(Boolean).join(' ')}
+                      </span>
+                    )}
                   </span>
                 </li>
               ))}
