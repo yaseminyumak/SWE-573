@@ -1,9 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react'
 import { fetchRecipes } from './recipeApi'
 import { useAuth } from '../../auth/AuthProvider'
 import EntityCardImage from '../../shared/components/EntityCardImage'
+import { SPECIAL_DAYS } from '../../shared/components/SpecialDaysPicker'
 
 const DIFFICULTIES = ['EASY', 'MEDIUM', 'HARD']
 const DIFFICULTY_LABELS: Record<string, string> = { EASY: 'Easy', MEDIUM: 'Medium', HARD: 'Hard' }
@@ -43,6 +44,56 @@ function CheckboxGroup({ options, selected, onChange, labelFn }: {
           </span>
         </label>
       ))}
+    </div>
+  )
+}
+
+function SearchableCheckboxGroup({ options, selected, onChange, placeholder }: {
+  options: string[]
+  selected: string[]
+  onChange: (v: string[]) => void
+  placeholder?: string
+}) {
+  const [search, setSearch] = useState('')
+  const toggle = (opt: string) =>
+    onChange(selected.includes(opt) ? selected.filter((s) => s !== opt) : [...selected, opt])
+  const filtered = options.filter((o) => o.toLowerCase().includes(search.toLowerCase()))
+
+  return (
+    <div className="space-y-2">
+      {selected.length > 0 && (
+        <div className="flex flex-wrap gap-1">
+          {selected.map((s) => (
+            <span key={s} className="inline-flex items-center gap-0.5 bg-[#ede8ee] border border-[#d67ec9] text-[#8c2d9c] px-1.5 py-0.5 rounded text-[10px] font-medium max-w-full">
+              <span className="truncate">{s}</span>
+              <button type="button" onClick={() => toggle(s)} className="leading-none hover:text-[#7a2589] flex-shrink-0 ml-0.5">×</button>
+            </span>
+          ))}
+        </div>
+      )}
+      <input
+        type="text"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        placeholder={placeholder ?? 'Search…'}
+        className="w-full border border-gray-300 rounded px-2 py-1 text-xs focus:outline-none focus:border-[#8c2d9c]"
+      />
+      <div className="max-h-36 overflow-y-auto space-y-1.5 pr-0.5">
+        {filtered.map((opt) => (
+          <label key={opt} className="flex items-center gap-2 cursor-pointer group">
+            <input
+              type="checkbox"
+              checked={selected.includes(opt)}
+              onChange={() => toggle(opt)}
+              className="accent-[#8c2d9c] w-3.5 h-3.5 flex-shrink-0"
+            />
+            <span className="text-xs text-gray-600 group-hover:text-[#8c2d9c] leading-tight">{opt}</span>
+          </label>
+        ))}
+        {filtered.length === 0 && (
+          <p className="text-[10px] text-gray-400 py-1">No matches</p>
+        )}
+      </div>
     </div>
   )
 }
@@ -126,13 +177,16 @@ function DualRangeSlider({ value, onChange }: {
 
 export default function RecipeListPage() {
   const { isAuthenticated } = useAuth()
-  const [tags, setTags] = useState('')
+  const [searchParams, setSearchParams] = useSearchParams()
+  const [selTags, setSelTags] = useState<string[]>([])
+  const [selSpecialDays, setSelSpecialDays] = useState<string[]>([])
   const [selDifficulties, setSelDifficulties] = useState<string[]>([])
   const [durRange, setDurRange] = useState<[number, number]>([0, MAX_DUR])
   const [selCountries, setSelCountries] = useState<string[]>([])
   const [region, setRegion] = useState('')
   const [applied, setApplied] = useState({
-    tags: '',
+    tags: [] as string[],
+    specialDays: [] as string[],
     difficulties: [] as string[],
     durRange: [0, MAX_DUR] as [number, number],
     countries: [] as string[],
@@ -144,25 +198,52 @@ export default function RecipeListPage() {
     queryFn: fetchRecipes,
   })
 
+  useEffect(() => {
+    const sdParam = searchParams.get('specialDay')
+    if (sdParam) {
+      setSelSpecialDays([sdParam])
+      setApplied((a) => ({ ...a, specialDays: [sdParam] }))
+      setSearchParams({}, { replace: true })
+    }
+  }, [])
+
+  const tagOptions = useMemo(() => {
+    const set = new Set<string>()
+    recipes?.forEach((r) => r.tags?.forEach((t) => set.add(t)))
+    return Array.from(set).sort()
+  }, [recipes])
+
+  const specialDayOptions = useMemo(() => [...SPECIAL_DAYS].sort(), [])
+
   const countryOptions = useMemo(() => {
     const set = new Set(recipes?.map((r) => r.country).filter(Boolean) as string[])
     return Array.from(set).sort()
   }, [recipes])
 
-  const applyFilters = () => setApplied({ tags, difficulties: selDifficulties, durRange, countries: selCountries, region })
+  const applyFilters = () => setApplied({
+    tags: selTags,
+    specialDays: selSpecialDays,
+    difficulties: selDifficulties,
+    durRange,
+    countries: selCountries,
+    region,
+  })
 
   const clearFilters = () => {
-    setTags(''); setSelDifficulties([]); setDurRange([0, MAX_DUR]); setSelCountries([]); setRegion('')
-    setApplied({ tags: '', difficulties: [], durRange: [0, MAX_DUR], countries: [], region: '' })
+    setSelTags([]); setSelSpecialDays([]); setSelDifficulties([])
+    setDurRange([0, MAX_DUR]); setSelCountries([]); setRegion('')
+    setApplied({ tags: [], specialDays: [], difficulties: [], durRange: [0, MAX_DUR], countries: [], region: '' })
   }
 
-  const hasActiveFilters = applied.tags || applied.difficulties.length > 0 ||
+  const hasActiveFilters = applied.tags.length > 0 || applied.specialDays.length > 0 ||
+    applied.difficulties.length > 0 ||
     !(applied.durRange[0] === 0 && applied.durRange[1] === MAX_DUR) ||
     applied.countries.length > 0 || applied.region
 
   const filtered = recipes?.filter((r) => {
     if (applied.difficulties.length > 0 && !applied.difficulties.includes(r.difficulty)) return false
-    if (applied.tags && !r.tags?.some((t) => t.toLowerCase().includes(applied.tags.toLowerCase()))) return false
+    if (applied.tags.length > 0 && !applied.tags.some((t) => r.tags?.includes(t))) return false
+    if (applied.specialDays.length > 0 && !applied.specialDays.some((s) => r.specialDays?.includes(s))) return false
     if (applied.countries.length > 0 && !applied.countries.includes(r.country ?? '')) return false
     const loc = `${r.country ?? ''} ${r.region ?? ''}`.toLowerCase()
     if (applied.region && !loc.includes(applied.region.toLowerCase())) return false
@@ -182,11 +263,26 @@ export default function RecipeListPage() {
           <div className="bg-white border border-gray-200 rounded-lg p-4 space-y-4 shadow-sm">
             <p className="font-bold text-sm text-[#171433]">Filters</p>
 
+            {tagOptions.length > 0 && (
+              <div>
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Tags</label>
+                <SearchableCheckboxGroup
+                  options={tagOptions}
+                  selected={selTags}
+                  onChange={setSelTags}
+                  placeholder="Search tags…"
+                />
+              </div>
+            )}
+
             <div>
-              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Tags</label>
-              <input type="text" value={tags} onChange={(e) => setTags(e.target.value)}
-                placeholder="e.g., Vegetarian"
-                className="w-full border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:border-[#8c2d9c]" />
+              <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Special Days</label>
+              <SearchableCheckboxGroup
+                options={specialDayOptions}
+                selected={selSpecialDays}
+                onChange={setSelSpecialDays}
+                placeholder="Search special days…"
+              />
             </div>
 
             <div>

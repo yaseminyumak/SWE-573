@@ -31,6 +31,7 @@ export interface RecipeResponse {
   tags: string[]
   originStory: string | null
   associatedTechniqueIds: string[]
+  specialDays: string[]
 }
 
 export interface CreateRecipeRequest {
@@ -45,6 +46,7 @@ export interface CreateRecipeRequest {
   tags?: string[]
   originStory?: string
   associatedTechniqueIds?: string[]
+  specialDays?: string[]
 }
 
 import { apiClient } from '../../shared/api/client'

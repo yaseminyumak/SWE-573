@@ -18,7 +18,8 @@ public record CreateRecipeRequest(
 	String country,
 	List<String> tags,
 	String originStory,
-	Set<UUID> associatedTechniqueIds
+	Set<UUID> associatedTechniqueIds,
+	List<String> specialDays
 ) {
 	public record StepInput(int order, @NotBlank String instruction) {}
 	public record IngredientInput(@NotBlank String name, String quantity, String unit, UUID ingredientId) {}

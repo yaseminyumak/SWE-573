@@ -22,7 +22,8 @@ public record RecipeResponse(
 	String country,
 	List<String> tags,
 	String originStory,
-	Set<UUID> associatedTechniqueIds
+	Set<UUID> associatedTechniqueIds,
+	List<String> specialDays
 ) {
 	public record StepDto(int order, String instruction) {}
 	public record IngredientDto(String name, String quantity, String unit, UUID ingredientId) {}
