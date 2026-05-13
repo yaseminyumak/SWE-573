@@ -72,6 +72,11 @@ public class RecipeEntity {
 	@Column(name = "special_day", length = 100)
 	private List<String> specialDays = new ArrayList<>();
 
+	@ElementCollection(fetch = FetchType.LAZY)
+	@CollectionTable(name = "recipe_heritage_ids", joinColumns = @JoinColumn(name = "recipe_id"))
+	@Column(name = "heritage_id")
+	private Set<UUID> heritageIds = new HashSet<>();
+
 	@SuppressWarnings("unused")
 	protected RecipeEntity() {
 	}
@@ -194,5 +199,13 @@ public class RecipeEntity {
 
 	public void setSpecialDays(List<String> specialDays) {
 		this.specialDays = specialDays;
+	}
+
+	public Set<UUID> getHeritageIds() {
+		return heritageIds;
+	}
+
+	public void setHeritageIds(Set<UUID> heritageIds) {
+		this.heritageIds = heritageIds;
 	}
 }

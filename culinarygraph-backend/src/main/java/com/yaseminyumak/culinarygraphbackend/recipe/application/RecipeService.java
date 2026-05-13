@@ -45,7 +45,8 @@ public class RecipeService {
 			request.tags(),
 			request.originStory(),
 			request.associatedTechniqueIds() != null ? new HashSet<>(request.associatedTechniqueIds()) : new HashSet<>(),
-			request.specialDays()
+			request.specialDays(),
+			request.heritageIds() != null ? new HashSet<>(request.heritageIds()) : new HashSet<>()
 		);
 		return recipeRepository.save(recipe);
 	}
@@ -75,7 +76,8 @@ public class RecipeService {
 			request.title(), request.description(), request.difficulty(), request.durationMinutes(),
 			steps, ingredients, request.country(), request.tags(), request.originStory(),
 			request.associatedTechniqueIds() != null ? new HashSet<>(request.associatedTechniqueIds()) : new HashSet<>(),
-			request.specialDays()
+			request.specialDays(),
+			request.heritageIds() != null ? new HashSet<>(request.heritageIds()) : new HashSet<>()
 		);
 		return recipeRepository.save(recipe);
 	}

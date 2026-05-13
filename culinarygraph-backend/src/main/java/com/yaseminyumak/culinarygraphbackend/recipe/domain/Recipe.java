@@ -30,6 +30,7 @@ public class Recipe {
 	private String originStory;
 	private Set<UUID> associatedTechniqueIds;
 	private List<String> specialDays;
+	private Set<UUID> heritageIds;
 
 	private Recipe(UUID id, Instant createdAt, List<RecipeStep> steps, List<RecipeIngredient> ingredients) {
 		this.id = id;
@@ -39,6 +40,7 @@ public class Recipe {
 		this.tags = new ArrayList<>();
 		this.associatedTechniqueIds = new HashSet<>();
 		this.specialDays = new ArrayList<>();
+		this.heritageIds = new HashSet<>();
 	}
 
 	/**
@@ -49,7 +51,8 @@ public class Recipe {
 	                                     Instant createdAt, Instant updatedAt,
 	                                     List<RecipeStep> steps, List<RecipeIngredient> ingredients,
 	                                     String country, List<String> tags, String originStory,
-	                                     Set<UUID> associatedTechniqueIds, List<String> specialDays) {
+	                                     Set<UUID> associatedTechniqueIds, List<String> specialDays,
+	                                     Set<UUID> heritageIds) {
 		Recipe r = new Recipe(id, createdAt, steps != null ? steps : List.of(), ingredients != null ? ingredients : List.of());
 		r.title = title;
 		r.description = description != null ? description : "";
@@ -63,6 +66,7 @@ public class Recipe {
 		r.originStory = originStory;
 		r.associatedTechniqueIds = associatedTechniqueIds != null ? new HashSet<>(associatedTechniqueIds) : new HashSet<>();
 		r.specialDays = specialDays != null ? new ArrayList<>(specialDays) : new ArrayList<>();
+		r.heritageIds = heritageIds != null ? new HashSet<>(heritageIds) : new HashSet<>();
 		return r;
 	}
 
@@ -72,7 +76,8 @@ public class Recipe {
 	public static Recipe create(String title, String description, DifficultyLevel difficulty, Integer durationMinutes,
 	                            String createdBy, List<RecipeStep> steps, List<RecipeIngredient> ingredients,
 	                            String country, List<String> tags, String originStory,
-	                            Set<UUID> associatedTechniqueIds, List<String> specialDays) {
+	                            Set<UUID> associatedTechniqueIds, List<String> specialDays,
+	                            Set<UUID> heritageIds) {
 		Objects.requireNonNull(title, "title cannot be null");
 		Objects.requireNonNull(createdBy, "createdBy cannot be null");
 		Recipe r = new Recipe(UUID.randomUUID(), Instant.now(), steps != null ? steps : List.of(), ingredients != null ? ingredients : List.of());
@@ -88,13 +93,14 @@ public class Recipe {
 		r.originStory = originStory;
 		r.associatedTechniqueIds = associatedTechniqueIds != null ? new HashSet<>(associatedTechniqueIds) : new HashSet<>();
 		r.specialDays = specialDays != null ? new ArrayList<>(specialDays) : new ArrayList<>();
+		r.heritageIds = heritageIds != null ? new HashSet<>(heritageIds) : new HashSet<>();
 		return r;
 	}
 
 	public void update(String title, String description, DifficultyLevel difficulty, Integer durationMinutes,
 	                   List<RecipeStep> steps, List<RecipeIngredient> ingredients, String country,
 	                   List<String> tags, String originStory, Set<UUID> associatedTechniqueIds,
-	                   List<String> specialDays) {
+	                   List<String> specialDays, Set<UUID> heritageIds) {
 		this.title = title != null ? title.trim() : this.title;
 		this.description = description != null ? description.trim() : "";
 		this.difficulty = difficulty != null ? difficulty : this.difficulty;
@@ -108,6 +114,7 @@ public class Recipe {
 		this.originStory = originStory;
 		this.associatedTechniqueIds = associatedTechniqueIds != null ? new HashSet<>(associatedTechniqueIds) : new HashSet<>();
 		this.specialDays = specialDays != null ? new ArrayList<>(specialDays) : new ArrayList<>();
+		this.heritageIds = heritageIds != null ? new HashSet<>(heritageIds) : new HashSet<>();
 		this.updatedAt = Instant.now();
 	}
 
@@ -193,5 +200,9 @@ public class Recipe {
 
 	public List<String> getSpecialDays() {
 		return Collections.unmodifiableList(specialDays);
+	}
+
+	public Set<UUID> getHeritageIds() {
+		return Collections.unmodifiableSet(heritageIds);
 	}
 }
