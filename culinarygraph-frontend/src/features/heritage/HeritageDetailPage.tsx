@@ -8,6 +8,7 @@ import { useAuth } from '../../auth/AuthProvider'
 import LikeButton from '../social/LikeButton'
 import CommentSection from '../social/CommentSection'
 import ImageManager from '../../shared/components/ImageManager'
+import EntityCardImage from '../../shared/components/EntityCardImage'
 
 export default function HeritageDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -99,26 +100,34 @@ export default function HeritageDetailPage() {
 
           {relatedRecipes.length > 0 && (
             <div>
-              <p className="font-bold text-sm text-[#171433] mb-2">
+              <p className="font-bold text-sm text-[#171433] mb-3">
                 Related Recipes
                 <span className="ml-2 text-xs font-normal text-gray-400">({relatedRecipes.length})</span>
               </p>
-              <ul className="space-y-1">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {relatedRecipes.map((r) => (
-                  <li key={r.id} className="text-sm text-gray-700 flex items-start gap-2">
-                    <span className="text-[#8c2d9c] font-bold mt-0.5">·</span>
-                    <Link
-                      to={`/recipes/${r.id}`}
-                      className="text-[#8c2d9c] hover:underline font-medium"
-                    >
-                      {r.title}
-                    </Link>
-                    {r.country && (
-                      <span className="text-xs text-gray-400 mt-0.5">— {r.country}</span>
-                    )}
-                  </li>
+                  <Link
+                    key={r.id}
+                    to={`/recipes/${r.id}`}
+                    className="border border-gray-200 rounded-xl bg-white hover:border-[#8c2d9c] hover:shadow-md transition-all group overflow-hidden flex flex-col"
+                  >
+                    <EntityCardImage entityType="RECIPE" entityId={r.id} />
+                    <div className="p-3 flex flex-col gap-1">
+                      <p className="font-bold text-sm text-[#171433] group-hover:text-[#8c2d9c] leading-snug">{r.title}</p>
+                      {(r.country || r.region) && (
+                        <p className="text-xs text-[#8c2d9c] font-medium">{[r.country, r.region].filter(Boolean).join(', ')}</p>
+                      )}
+                      {r.tags && r.tags.length > 0 && (
+                        <div className="flex flex-wrap gap-1 mt-0.5">
+                          {r.tags.slice(0, 3).map((tag) => (
+                            <span key={tag} className="text-[10px] bg-[#ede8ee] text-[#8c2d9c] px-1.5 py-0.5 rounded-full">{tag}</span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </Link>
                 ))}
-              </ul>
+              </div>
             </div>
           )}
 
