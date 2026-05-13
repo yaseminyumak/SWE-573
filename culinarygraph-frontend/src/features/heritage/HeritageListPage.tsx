@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react'
 import { fetchHeritages } from '../catalog/catalogApi'
 import { fetchRecipes } from '../recipe/recipeApi'
 import { useAuth } from '../../auth/AuthProvider'
+import EntityCardImage from '../../shared/components/EntityCardImage'
 
 export default function HeritageListPage() {
   const { isAuthenticated } = useAuth()
@@ -116,6 +117,7 @@ export default function HeritageListPage() {
                     to={`/heritage/${h.id}`}
                     className="border border-gray-200 rounded-xl bg-white hover:border-[#8c2d9c] hover:shadow-md transition-all group overflow-hidden flex flex-col"
                   >
+                    <EntityCardImage entityType="HERITAGE" entityId={h.id} />
                     <div className="p-4 flex flex-col gap-1">
                       <p className="font-bold text-sm text-[#171433] group-hover:text-[#8c2d9c] leading-snug">{h.name}</p>
                       {h.country && (
