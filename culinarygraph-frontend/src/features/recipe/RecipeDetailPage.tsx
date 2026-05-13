@@ -21,7 +21,7 @@ export default function RecipeDetailPage() {
     queryFn: () => fetchRecipe(id!),
     enabled: !!id,
   })
-  const { techniqueById, ingredientByName } = useCatalogIndex()
+  const { techniqueById, ingredientByName, heritageById } = useCatalogIndex()
   const delMutation = useMutation({
     mutationFn: () => deleteRecipe(id!),
     onSuccess: () => { queryClient.invalidateQueries({ queryKey: ['recipes'] }); navigate('/recipes') },
@@ -116,6 +116,23 @@ export default function RecipeDetailPage() {
                   <Link to={`/catalog/techniques/${id}`}
                     className="text-[#8c2d9c] hover:underline font-medium">
                     {techniqueById.get(id) ?? id}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {recipe.heritageIds?.length > 0 && (
+          <div>
+            <h2 className="font-bold text-base text-[#171433] mb-2">Heritage</h2>
+            <ul className="space-y-1">
+              {recipe.heritageIds.map((hid) => (
+                <li key={hid} className="text-sm text-gray-700 flex items-start gap-2">
+                  <span className="text-[#8c2d9c] font-bold mt-0.5">·</span>
+                  <Link to={`/heritage/${hid}`}
+                    className="text-[#8c2d9c] hover:underline font-medium">
+                    {heritageById.get(hid) ?? hid}
                   </Link>
                 </li>
               ))}

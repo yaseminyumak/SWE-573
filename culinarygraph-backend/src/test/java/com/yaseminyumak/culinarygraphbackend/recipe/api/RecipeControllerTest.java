@@ -48,7 +48,7 @@ class RecipeControllerTest {
                 DifficultyLevel.MEDIUM, 30, status, "chef-1",
                 Instant.now(), Instant.now(),
                 List.of(), List.of(),
-                "Italy", List.of("Italian", "Quick"), "Roman origin", Set.of(), null
+                "Italy", List.of("Italian", "Quick"), "Roman origin", Set.of(), null, null
         );
     }
 
@@ -59,7 +59,7 @@ class RecipeControllerTest {
                 List.of(new CreateRecipeRequest.StepInput(1, "Boil water")),
                 List.of(new CreateRecipeRequest.IngredientInput("Pasta", "200", "g", null)),
                 "Italy", List.of("Italian"), "Roman origin",
-                Set.of(), null
+                Set.of(), null, null
         );
     }
 
@@ -117,7 +117,7 @@ class RecipeControllerTest {
     void create_returns400WhenTitleIsBlank() throws Exception {
         CreateRecipeRequest request = new CreateRecipeRequest(
                 "", null, null, null,
-                List.of(), List.of(), null, null, null, null, null
+                List.of(), List.of(), null, null, null, null, null, null
         );
 
         mockMvc.perform(post("/api/recipes")
@@ -132,7 +132,7 @@ class RecipeControllerTest {
                 "Pasta", null, null, null,
                 null,
                 List.of(new CreateRecipeRequest.IngredientInput("Pasta", "200", "g", null)),
-                null, null, null, null, null
+                null, null, null, null, null, null
         );
 
         mockMvc.perform(post("/api/recipes")
@@ -186,7 +186,7 @@ class RecipeControllerTest {
                 RECIPE_ID, "Pasta Carbonara", "desc",
                 DifficultyLevel.MEDIUM, 30, PublishStatus.ARCHIVED, "chef-1",
                 Instant.now(), Instant.now(),
-                List.of(), List.of(), "Italy", List.of(), null, Set.of(), null
+                List.of(), List.of(), "Italy", List.of(), null, Set.of(), null, null
         );
         when(recipeService.archive(RECIPE_ID)).thenReturn(archived);
 

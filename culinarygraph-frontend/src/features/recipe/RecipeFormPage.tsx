@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { createRecipe, updateRecipe, fetchRecipe } from './recipeApi'
 import type { CreateRecipeRequest, DifficultyLevel } from './recipeApi'
-import { fetchIngredients, fetchTechniques } from '../catalog/catalogApi'
+import { fetchIngredients, fetchTechniques, fetchHeritages } from '../catalog/catalogApi'
 import RelationPicker from '../../shared/components/RelationPicker'
 import ImageManager from '../../shared/components/ImageManager'
 import CoverPhotoPicker from '../../shared/components/CoverPhotoPicker'
@@ -28,6 +28,7 @@ export default function RecipeFormPage() {
   const [region, setRegion] = useState('')
   const [ingredients, setIngredients] = useState([{ name: '' }])
   const [associatedTechniqueNames, setAssociatedTechniqueNames] = useState<string[]>([])
+  const [selectedHeritageNames, setSelectedHeritageNames] = useState<string[]>([])
   const [steps, setSteps] = useState<string[]>([''])
   const [tags, setTags] = useState('')
   const [originStory, setOriginStory] = useState('')
@@ -36,6 +37,7 @@ export default function RecipeFormPage() {
 
   const { data: catalogIngredients = [] } = useQuery({ queryKey: ['catalog', 'ingredients'], queryFn: fetchIngredients })
   const { data: techniques = [] } = useQuery({ queryKey: ['catalog', 'techniques'], queryFn: fetchTechniques })
+  const { data: heritages = [] } = useQuery({ queryKey: ['heritage'], queryFn: fetchHeritages })
   const { data: existing } = useQuery({
     queryKey: ['recipes', id],
     queryFn: () => fetchRecipe(id!),
@@ -46,6 +48,9 @@ export default function RecipeFormPage() {
   const techniqueNames = techniques.map((t) => t.name)
   const techniqueNameToId = new Map(techniques.map((t) => [t.name, t.id]))
   const techniqueIdToName = new Map(techniques.map((t) => [t.id, t.name]))
+  const heritageNames = heritages.map((h) => h.name)
+  const heritageNameToId = new Map(heritages.map((h) => [h.name, h.id]))
+  const heritageIdToName = new Map(heritages.map((h) => [h.id, h.name]))
 
   useEffect(() => {
     if (!existing) return
@@ -57,6 +62,9 @@ export default function RecipeFormPage() {
     setIngredients(existing.ingredients.length > 0 ? existing.ingredients.map((i) => ({ name: i.name })) : [{ name: '' }])
     setAssociatedTechniqueNames(
       (existing.associatedTechniqueIds ?? []).map((tid) => techniqueIdToName.get(tid) ?? '').filter(Boolean)
+    )
+    setSelectedHeritageNames(
+      (existing.heritageIds ?? []).map((hid) => heritageIdToName.get(hid) ?? '').filter(Boolean)
     )
     setSteps(existing.steps.length > 0 ? existing.steps.map((s) => s.instruction) : [''])
     setTags((existing.tags ?? []).join(', '))
@@ -107,6 +115,9 @@ export default function RecipeFormPage() {
       associatedTechniqueIds: associatedTechniqueNames
         .map((n) => techniqueNameToId.get(n))
         .filter((tid): tid is string => tid != null),
+      heritageIds: selectedHeritageNames
+        .map((n) => heritageNameToId.get(n))
+        .filter((hid): hid is string => hid != null),
       tags: tags.split(',').map((t) => t.trim()).filter(Boolean),
       originStory: originStory.trim() || undefined,
       specialDays,
@@ -201,6 +212,14 @@ export default function RecipeFormPage() {
           selected={associatedTechniqueNames}
           onAdd={(n) => setAssociatedTechniqueNames((s) => [...s, n])}
           onRemove={(n) => setAssociatedTechniqueNames((s) => s.filter((x) => x !== n))}
+        />
+
+        <RelationPicker
+          label="Heritage"
+          available={heritageNames}
+          selected={selectedHeritageNames}
+          onAdd={(n) => setSelectedHeritageNames((s) => [...s, n])}
+          onRemove={(n) => setSelectedHeritageNames((s) => s.filter((x) => x !== n))}
         />
 
         <div>

@@ -55,6 +55,7 @@ public class RecipeRepositoryImpl implements RecipeRepository {
 		e.setOriginStory(recipe.getOriginStory());
 		e.setAssociatedTechniqueIds(new java.util.HashSet<>(recipe.getAssociatedTechniqueIds()));
 		e.setSpecialDays(new java.util.ArrayList<>(recipe.getSpecialDays()));
+		e.setHeritageIds(new java.util.HashSet<>(recipe.getHeritageIds()));
 		int order = 0;
 		for (RecipeStep step : recipe.getSteps()) {
 			RecipeStepEntity se = new RecipeStepEntity(e, order++, step.getInstruction());
@@ -76,7 +77,8 @@ public class RecipeRepositoryImpl implements RecipeRepository {
 			.collect(Collectors.toList());
 		return Recipe.fromPersistence(e.getId(), e.getTitle(), e.getDescription(), e.getDifficulty(),
 			e.getDurationMinutes(), e.getStatus(), e.getCreatedBy(), e.getCreatedAt(), e.getUpdatedAt(), steps, ingredients,
-			e.getCountry(), e.getTags(), e.getOriginStory(), e.getAssociatedTechniqueIds(), e.getSpecialDays());
+			e.getCountry(), e.getTags(), e.getOriginStory(), e.getAssociatedTechniqueIds(), e.getSpecialDays(),
+			e.getHeritageIds());
 	}
 
 	@Override

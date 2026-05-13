@@ -19,7 +19,7 @@ class RecipeTest {
                 List.of(new RecipeStep(1, "Boil water"), new RecipeStep(2, "Cook pasta")),
                 List.of(new RecipeIngredient("Pasta", "200", "g", null)),
                 "Italy", List.of("Italian", "Quick"), "Roman origin",
-                Set.of(), null
+                Set.of(), null, null
         );
     }
 
@@ -32,7 +32,7 @@ class RecipeTest {
                 List.of(new RecipeStep(1, "Cook")),
                 List.of(new RecipeIngredient("Pasta", "200", "g", null)),
                 "Italy", List.of("quick"), "story",
-                Set.of(techId), null
+                Set.of(techId), null, null
         );
 
         assertThat(r.getId()).isNotNull();
@@ -53,7 +53,7 @@ class RecipeTest {
     @Test
     void create_trimsTitleAndDescription() {
         Recipe r = Recipe.create("  Pasta  ", "  desc  ", null, null,
-                "chef-1", List.of(), List.of(), null, null, null, null, null);
+                "chef-1", List.of(), List.of(), null, null, null, null, null, null);
 
         assertThat(r.getTitle()).isEqualTo("Pasta");
         assertThat(r.getDescription()).isEqualTo("desc");
@@ -67,7 +67,7 @@ class RecipeTest {
     @Test
     void create_defaultsDifficultyToMediumWhenNull() {
         Recipe r = Recipe.create("Pasta", null, null, null,
-                "chef-1", List.of(), List.of(), null, null, null, null, null);
+                "chef-1", List.of(), List.of(), null, null, null, null, null, null);
 
         assertThat(r.getDifficulty()).isEqualTo(DifficultyLevel.MEDIUM);
     }
@@ -75,7 +75,7 @@ class RecipeTest {
     @Test
     void create_negativeDurationIsStoredAsNull() {
         Recipe r = Recipe.create("Pasta", null, null, -5,
-                "chef-1", List.of(), List.of(), null, null, null, null, null);
+                "chef-1", List.of(), List.of(), null, null, null, null, null, null);
 
         assertThat(r.getDurationMinutes()).isNull();
     }
@@ -84,14 +84,14 @@ class RecipeTest {
     void create_throwsWhenTitleIsNull() {
         assertThatNullPointerException()
                 .isThrownBy(() -> Recipe.create(null, null, null, null,
-                        "chef-1", List.of(), List.of(), null, null, null, null, null));
+                        "chef-1", List.of(), List.of(), null, null, null, null, null, null));
     }
 
     @Test
     void create_throwsWhenCreatedByIsNull() {
         assertThatNullPointerException()
                 .isThrownBy(() -> Recipe.create("Pasta", null, null, null,
-                        null, List.of(), List.of(), null, null, null, null, null));
+                        null, List.of(), List.of(), null, null, null, null, null, null));
     }
 
     @Test
@@ -115,7 +115,7 @@ class RecipeTest {
                 List.of(new RecipeStep(1, "Toast rice")),
                 List.of(new RecipeIngredient("Rice", "300", "g", null)),
                 "Italy", List.of("slow"), "northern Italy",
-                Set.of(techId), null);
+                Set.of(techId), null, null);
 
         assertThat(r.getTitle()).isEqualTo("Risotto");
         assertThat(r.getDescription()).isEqualTo("new desc");
@@ -133,7 +133,7 @@ class RecipeTest {
         Thread.sleep(5);
 
         r.update("Risotto", null, null, null, List.of(), List.of(),
-                null, null, null, null, null);
+                null, null, null, null, null, null);
 
         assertThat(r.getUpdatedAt()).isAfter(before);
     }
@@ -173,7 +173,7 @@ class RecipeTest {
                 UUID.randomUUID(), "Pasta", "desc", DifficultyLevel.EASY,
                 30, PublishStatus.DRAFT, "chef-1",
                 Instant.now(), Instant.now(),
-                List.of(), List.of(), "Italy", List.of(), null, Set.of(), null
+                List.of(), List.of(), "Italy", List.of(), null, Set.of(), null, null
         );
 
         r.publish();

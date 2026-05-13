@@ -79,7 +79,8 @@ public class RecipeController {
 			r.getTags(),
 			r.getOriginStory(),
 			r.getAssociatedTechniqueIds(),
-			r.getSpecialDays()
+			r.getSpecialDays(),
+			r.getHeritageIds()
 		);
 	}
 }
