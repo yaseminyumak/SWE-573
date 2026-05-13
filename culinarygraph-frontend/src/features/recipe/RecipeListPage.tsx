@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Link, useSearchParams } from 'react-router-dom'
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react'
 import { fetchRecipes } from './recipeApi'
+import { fetchHeritages } from '../catalog/catalogApi'
 import { useAuth } from '../../auth/AuthProvider'
 import EntityCardImage from '../../shared/components/EntityCardImage'
 import { SPECIAL_DAYS } from '../../shared/components/SpecialDaysPicker'
@@ -184,6 +185,7 @@ export default function RecipeListPage() {
   const [durRange, setDurRange] = useState<[number, number]>([0, MAX_DUR])
   const [selCountries, setSelCountries] = useState<string[]>([])
   const [region, setRegion] = useState('')
+  const [selHeritages, setSelHeritages] = useState<string[]>([])
   const [applied, setApplied] = useState({
     tags: [] as string[],
     specialDays: [] as string[],
@@ -191,11 +193,17 @@ export default function RecipeListPage() {
     durRange: [0, MAX_DUR] as [number, number],
     countries: [] as string[],
     region: '',
+    heritages: [] as string[],
   })
 
   const { data: recipes, isLoading, error } = useQuery({
     queryKey: ['recipes'],
     queryFn: fetchRecipes,
+  })
+
+  const { data: heritages = [] } = useQuery({
+    queryKey: ['heritage'],
+    queryFn: fetchHeritages,
   })
 
   useEffect(() => {
@@ -220,6 +228,12 @@ export default function RecipeListPage() {
     return Array.from(set).sort()
   }, [recipes])
 
+  const heritageOptions = useMemo(() => heritages.map((h) => h.name).sort(), [heritages])
+  const heritageNameToId = useMemo(
+    () => new Map(heritages.map((h) => [h.name, h.id])),
+    [heritages],
+  )
+
   const applyFilters = () => setApplied({
     tags: selTags,
     specialDays: selSpecialDays,
@@ -227,18 +241,19 @@ export default function RecipeListPage() {
     durRange,
     countries: selCountries,
     region,
+    heritages: selHeritages,
   })
 
   const clearFilters = () => {
     setSelTags([]); setSelSpecialDays([]); setSelDifficulties([])
-    setDurRange([0, MAX_DUR]); setSelCountries([]); setRegion('')
-    setApplied({ tags: [], specialDays: [], difficulties: [], durRange: [0, MAX_DUR], countries: [], region: '' })
+    setDurRange([0, MAX_DUR]); setSelCountries([]); setRegion(''); setSelHeritages([])
+    setApplied({ tags: [], specialDays: [], difficulties: [], durRange: [0, MAX_DUR], countries: [], region: '', heritages: [] })
   }
 
   const hasActiveFilters = applied.tags.length > 0 || applied.specialDays.length > 0 ||
     applied.difficulties.length > 0 ||
     !(applied.durRange[0] === 0 && applied.durRange[1] === MAX_DUR) ||
-    applied.countries.length > 0 || applied.region
+    applied.countries.length > 0 || applied.region || applied.heritages.length > 0
 
   const filtered = recipes?.filter((r) => {
     if (applied.difficulties.length > 0 && !applied.difficulties.includes(r.difficulty)) return false
@@ -247,6 +262,10 @@ export default function RecipeListPage() {
     if (applied.countries.length > 0 && !applied.countries.includes(r.country ?? '')) return false
     const loc = `${r.country ?? ''} ${r.region ?? ''}`.toLowerCase()
     if (applied.region && !loc.includes(applied.region.toLowerCase())) return false
+    if (applied.heritages.length > 0) {
+      const ids = applied.heritages.map((n) => heritageNameToId.get(n)).filter(Boolean) as string[]
+      if (!ids.some((id) => r.heritageIds?.includes(id))) return false
+    }
     const [minD, maxD] = applied.durRange
     if (!(minD === 0 && maxD === MAX_DUR)) {
       if (r.durationMinutes == null) return false
@@ -271,6 +290,18 @@ export default function RecipeListPage() {
                   selected={selTags}
                   onChange={setSelTags}
                   placeholder="Search tags…"
+                />
+              </div>
+            )}
+
+            {heritageOptions.length > 0 && (
+              <div>
+                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">Heritage</label>
+                <SearchableCheckboxGroup
+                  options={heritageOptions}
+                  selected={selHeritages}
+                  onChange={setSelHeritages}
+                  placeholder="Search heritage…"
                 />
               </div>
             )}
