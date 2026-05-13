@@ -1,7 +1,8 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { fetchHeritage, deleteHeritage } from '../catalog/catalogApi'
+import { fetchRecipes } from '../recipe/recipeApi'
 import ConfirmModal from '../../shared/components/ConfirmModal'
 import { useAuth } from '../../auth/AuthProvider'
 import LikeButton from '../social/LikeButton'
@@ -20,6 +21,15 @@ export default function HeritageDetailPage() {
     queryFn: () => fetchHeritage(id!),
     enabled: !!id,
   })
+  const { data: allRecipes = [] } = useQuery({
+    queryKey: ['recipes'],
+    queryFn: fetchRecipes,
+  })
+
+  const relatedRecipes = useMemo(
+    () => allRecipes.filter((r) => (r.heritageIds ?? []).includes(id!)),
+    [allRecipes, id],
+  )
 
   const delMutation = useMutation({
     mutationFn: () => deleteHeritage(id!),
@@ -83,6 +93,31 @@ export default function HeritageDetailPage() {
               {heritage.description}
             </p>
           </div>
+
+          {relatedRecipes.length > 0 && (
+            <div>
+              <p className="font-bold text-sm text-[#171433] mb-2">
+                Related Recipes
+                <span className="ml-2 text-xs font-normal text-gray-400">({relatedRecipes.length})</span>
+              </p>
+              <ul className="space-y-1">
+                {relatedRecipes.map((r) => (
+                  <li key={r.id} className="text-sm text-gray-700 flex items-start gap-2">
+                    <span className="text-[#8c2d9c] font-bold mt-0.5">·</span>
+                    <Link
+                      to={`/recipes/${r.id}`}
+                      className="text-[#8c2d9c] hover:underline font-medium"
+                    >
+                      {r.title}
+                    </Link>
+                    {r.country && (
+                      <span className="text-xs text-gray-400 mt-0.5">— {r.country}</span>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           <div className="pt-4 border-t border-gray-100">
             <LikeButton entityType="HERITAGE" entityId={heritage.id} commentCount={commentCount} />
