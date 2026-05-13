@@ -2,6 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { useState, useMemo } from 'react'
 import { fetchHeritages } from '../catalog/catalogApi'
+import { fetchRecipes } from '../recipe/recipeApi'
 import { useAuth } from '../../auth/AuthProvider'
 
 export default function HeritageListPage() {
@@ -13,6 +14,20 @@ export default function HeritageListPage() {
     queryKey: ['heritage'],
     queryFn: fetchHeritages,
   })
+  const { data: recipes = [] } = useQuery({
+    queryKey: ['recipes'],
+    queryFn: fetchRecipes,
+  })
+
+  const recipeCountByHeritage = useMemo(() => {
+    const counts = new Map<string, number>()
+    for (const recipe of recipes) {
+      for (const hid of recipe.heritageIds ?? []) {
+        counts.set(hid, (counts.get(hid) ?? 0) + 1)
+      }
+    }
+    return counts
+  }, [recipes])
 
   const countryOptions = useMemo(() => {
     const set = new Set(heritages?.map((h) => h.country).filter(Boolean))
@@ -93,35 +108,33 @@ export default function HeritageListPage() {
           )}
           {filtered.length > 0 && (
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {filtered.map((h) => (
-                <Link
-                  key={h.id}
-                  to={`/heritage/${h.id}`}
-                  className="border border-gray-200 rounded-xl bg-white hover:border-[#8c2d9c] hover:shadow-md transition-all group overflow-hidden flex flex-col"
-                >
-                  <div className="p-4">
-                    <p className="font-bold text-sm text-[#171433] group-hover:text-[#8c2d9c] leading-snug">{h.name}</p>
-                    {h.country && (
-                      <p className="text-xs text-[#8c2d9c] mt-1 font-medium">{h.country}</p>
-                    )}
-                    {h.description && (
-                      <p className="text-xs text-gray-400 mt-1 line-clamp-2">{h.description}</p>
-                    )}
-                    {h.createdBy && (
-                      <p className="text-xs text-gray-400 mt-2">
-                        By{' '}
-                        <Link
-                          to={`/profile/${h.createdBy}`}
-                          onClick={(e) => e.stopPropagation()}
-                          className="hover:text-[#8c2d9c] hover:underline"
-                        >
-                          {h.createdBy}
-                        </Link>
+              {filtered.map((h) => {
+                const recipeCount = recipeCountByHeritage.get(h.id) ?? 0
+                return (
+                  <Link
+                    key={h.id}
+                    to={`/heritage/${h.id}`}
+                    className="border border-gray-200 rounded-xl bg-white hover:border-[#8c2d9c] hover:shadow-md transition-all group overflow-hidden flex flex-col"
+                  >
+                    <div className="p-4 flex flex-col gap-1">
+                      <p className="font-bold text-sm text-[#171433] group-hover:text-[#8c2d9c] leading-snug">{h.name}</p>
+                      {h.country && (
+                        <p className="text-xs text-[#8c2d9c] font-medium">{h.country}</p>
+                      )}
+                      {h.description && (
+                        <p className="text-xs text-gray-400 line-clamp-2">{h.description}</p>
+                      )}
+                      <p className="text-xs text-gray-400 mt-1">
+                        {recipeCount === 0
+                          ? 'No recipes'
+                          : recipeCount === 1
+                            ? '1 recipe'
+                            : `${recipeCount} recipes`}
                       </p>
-                    )}
-                  </div>
-                </Link>
-              ))}
+                    </div>
+                  </Link>
+                )
+              })}
             </div>
           )}
         </div>
