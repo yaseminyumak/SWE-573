@@ -7,6 +7,7 @@ import ConfirmModal from '../../shared/components/ConfirmModal'
 import { useAuth } from '../../auth/AuthProvider'
 import LikeButton from '../social/LikeButton'
 import CommentSection from '../social/CommentSection'
+import ImageManager from '../../shared/components/ImageManager'
 
 export default function HeritageDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -87,6 +88,8 @@ export default function HeritageDetailPage() {
         <hr className="border-[#d67ec9] my-6" />
 
         <div className="space-y-6">
+          <ImageManager entityType="HERITAGE" entityId={heritage.id} canEdit={false} />
+
           <div>
             <p className="font-bold text-sm text-[#171433] mb-1">Description</p>
             <p className="text-sm text-gray-700 leading-relaxed border-l-2 border-[#d67ec9] pl-3 whitespace-pre-wrap">

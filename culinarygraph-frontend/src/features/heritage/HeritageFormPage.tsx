@@ -5,6 +5,9 @@ import { createHeritage, updateHeritage, fetchHeritage } from '../catalog/catalo
 import type { CreateHeritageRequest } from '../catalog/catalogApi'
 import { useAuth } from '../../auth/AuthProvider'
 import { COUNTRIES } from '../../shared/constants/countries'
+import ImageManager from '../../shared/components/ImageManager'
+import CoverPhotoPicker from '../../shared/components/CoverPhotoPicker'
+import { uploadImage } from '../../shared/api/imageApi'
 
 export default function HeritageFormPage() {
   const { id } = useParams<{ id: string }>()
@@ -16,6 +19,7 @@ export default function HeritageFormPage() {
   const [name, setName] = useState('')
   const [country, setCountry] = useState('')
   const [description, setDescription] = useState('')
+  const [coverFile, setCoverFile] = useState<File | null>(null)
 
   const { data: existing } = useQuery({
     queryKey: ['heritage', id],
@@ -33,7 +37,10 @@ export default function HeritageFormPage() {
   const mutation = useMutation({
     mutationFn: (body: CreateHeritageRequest) =>
       isEdit ? updateHeritage(id!, body) : createHeritage(body),
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
+      if (!isEdit && coverFile) {
+        await uploadImage('HERITAGE', data.id, coverFile).catch(() => {})
+      }
       queryClient.invalidateQueries({ queryKey: ['heritage'] })
       navigate(`/heritage/${data.id}`)
     },
@@ -60,7 +67,16 @@ export default function HeritageFormPage() {
       <h1 className="text-xl font-bold text-[#171433]">{isEdit ? 'Edit Heritage' : 'New Heritage'}</h1>
       <hr className="my-3 border-[#d67ec9]" />
 
+      {isEdit && existing?.createdBy === keycloak?.tokenParsed?.preferred_username && (
+        <div className="mb-6">
+          <ImageManager entityType="HERITAGE" entityId={id!} canEdit={true} />
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="space-y-4">
+        {!isEdit && (
+          <CoverPhotoPicker onChange={(f) => setCoverFile(f)} />
+        )}
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
           <input
