@@ -13,6 +13,9 @@ import TechniqueDetailPage from './features/catalog/TechniqueDetailPage'
 import RecipeListPage from './features/recipe/RecipeListPage'
 import RecipeFormPage from './features/recipe/RecipeFormPage'
 import RecipeDetailPage from './features/recipe/RecipeDetailPage'
+import HeritageListPage from './features/heritage/HeritageListPage'
+import HeritageFormPage from './features/heritage/HeritageFormPage'
+import HeritageDetailPage from './features/heritage/HeritageDetailPage'
 import SearchPage from './features/search/SearchPage'
 import ProfilePage from './features/profile/ProfilePage'
 import PublicProfilePage from './features/profile/PublicProfilePage'
@@ -40,6 +43,10 @@ function App() {
               <Route path="/recipes/new" element={<RecipeFormPage />} />
               <Route path="/recipes/:id/edit" element={<RecipeFormPage />} />
               <Route path="/recipes/:id" element={<RecipeDetailPage />} />
+              <Route path="/heritage" element={<HeritageListPage />} />
+              <Route path="/heritage/new" element={<HeritageFormPage />} />
+              <Route path="/heritage/:id/edit" element={<HeritageFormPage />} />
+              <Route path="/heritage/:id" element={<HeritageDetailPage />} />
               <Route path="/search" element={<SearchPage />} />
               <Route path="/profile" element={<ProfilePage />} />
               <Route path="/profile/:username" element={<PublicProfilePage />} />

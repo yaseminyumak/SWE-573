@@ -52,6 +52,7 @@ export default function Layout({ children }: { children: ReactNode }) {
             <NavLink to="/catalog/techniques">Techniques</NavLink>
             <NavLink to="/catalog/ingredients">Ingredients</NavLink>
             <NavLink to="/recipes">Recipes</NavLink>
+            <NavLink to="/heritage">Heritage</NavLink>
             {isAuthenticated ? (
               <>
                 <NavLink to="/profile">Profile</NavLink>

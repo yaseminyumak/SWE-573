@@ -124,3 +124,45 @@ export async function deleteTechnique(id: string): Promise<void> {
 export async function archiveTechnique(id: string): Promise<TechniqueResponse> {
   return apiClient<TechniqueResponse>(`/catalog/techniques/${id}/archive`, { method: 'PUT' })
 }
+
+export interface HeritageResponse {
+  id: string
+  name: string
+  country: string
+  description: string
+  createdBy: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CreateHeritageRequest {
+  name: string
+  country: string
+  description: string
+}
+
+export async function fetchHeritages(): Promise<HeritageResponse[]> {
+  return apiClient<HeritageResponse[]>('/heritage')
+}
+
+export async function fetchHeritage(id: string): Promise<HeritageResponse> {
+  return apiClient<HeritageResponse>(`/heritage/${id}`)
+}
+
+export async function createHeritage(body: CreateHeritageRequest): Promise<HeritageResponse> {
+  return apiClient<HeritageResponse>('/heritage', {
+    method: 'POST',
+    body: JSON.stringify(body),
+  })
+}
+
+export async function updateHeritage(id: string, body: CreateHeritageRequest): Promise<HeritageResponse> {
+  return apiClient<HeritageResponse>(`/heritage/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(body),
+  })
+}
+
+export async function deleteHeritage(id: string): Promise<void> {
+  return apiClient<void>(`/heritage/${id}`, { method: 'DELETE' })
+}
